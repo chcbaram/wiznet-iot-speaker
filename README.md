@@ -13,6 +13,9 @@
 - 소프트웨어
     - python, pySide6
 
+### 시스템 블럭도
+![main_block](https://user-images.githubusercontent.com/5537436/235310490-4343d7cb-b62b-47c4-9ad0-486fb1853087.jpg)
+
 ### 기본사양
 구분 | 품명 | 사양 | 비고
 ---- | ---- | ---- | ----
