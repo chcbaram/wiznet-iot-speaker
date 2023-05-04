@@ -15,6 +15,7 @@ bool fmcInit(void)
 {
   bool ret = false;
   FMC_NORSRAM_TimingTypeDef Timing = {0};
+  FMC_NORSRAM_TimingTypeDef ExtTiming = {0};
 
 
   /** Perform the SRAM1 memory initialization sequence
@@ -31,7 +32,7 @@ bool fmcInit(void)
   hsram1.Init.WaitSignalActive    = FMC_WAIT_TIMING_BEFORE_WS;
   hsram1.Init.WriteOperation      = FMC_WRITE_OPERATION_ENABLE;
   hsram1.Init.WaitSignal          = FMC_WAIT_SIGNAL_DISABLE;
-  hsram1.Init.ExtendedMode        = FMC_EXTENDED_MODE_DISABLE;
+  hsram1.Init.ExtendedMode        = FMC_EXTENDED_MODE_ENABLE;
   hsram1.Init.AsynchronousWait    = FMC_ASYNCHRONOUS_WAIT_DISABLE;
   hsram1.Init.WriteBurst          = FMC_WRITE_BURST_DISABLE;
   hsram1.Init.ContinuousClock     = FMC_CONTINUOUS_CLOCK_SYNC_ONLY;
@@ -46,8 +47,15 @@ bool fmcInit(void)
   Timing.DataLatency = 17;
   Timing.AccessMode = FMC_ACCESS_MODE_A;
   /* ExtTiming */
+  ExtTiming.AddressSetupTime  = 10;
+  ExtTiming.AddressHoldTime   = 15;
+  ExtTiming.DataSetupTime     = 20;
+  ExtTiming.BusTurnAroundDuration = 10;
+  ExtTiming.CLKDivision = 16;
+  ExtTiming.DataLatency = 17;
+  ExtTiming.AccessMode = FMC_ACCESS_MODE_A;
 
-  if (HAL_SRAM_Init(&hsram1, &Timing, NULL) == HAL_OK)
+  if (HAL_SRAM_Init(&hsram1, &Timing, &ExtTiming) == HAL_OK)
   {
     ret = true;
   }

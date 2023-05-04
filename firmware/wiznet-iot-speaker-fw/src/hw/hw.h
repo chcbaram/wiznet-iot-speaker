@@ -11,6 +11,8 @@
 #include "button.h"
 #include "qbuffer.h"
 #include "fmc.h"
+#include "buzzer.h"
+#include "swtimer.h"
 
 
 bool hwInit(void);

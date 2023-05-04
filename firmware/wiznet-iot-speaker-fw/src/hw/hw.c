@@ -11,6 +11,7 @@ bool hwInit(void)
 
   cliInit();
   logInit();
+  swtimerInit();
   ledInit();
   buttonInit();
   uartInit();
@@ -23,6 +24,7 @@ bool hwInit(void)
   logPrintf("\n");
 
   fmcInit();
-  
+  buzzerInit();
+
   return true;
 }
