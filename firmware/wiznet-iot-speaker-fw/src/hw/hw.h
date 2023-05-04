@@ -14,6 +14,7 @@
 #include "buzzer.h"
 #include "swtimer.h"
 #include "gpio.h"
+#include "w5300.h"
 
 
 bool hwInit(void);

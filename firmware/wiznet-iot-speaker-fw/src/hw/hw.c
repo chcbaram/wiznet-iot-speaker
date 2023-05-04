@@ -26,6 +26,7 @@ bool hwInit(void)
 
   fmcInit();
   buzzerInit();
+  w5300Init();
 
   return true;
 }
