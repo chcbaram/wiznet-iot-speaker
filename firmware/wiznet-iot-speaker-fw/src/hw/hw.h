@@ -10,6 +10,7 @@
 #include "log.h"
 #include "button.h"
 #include "qbuffer.h"
+#include "fmc.h"
 
 
 bool hwInit(void);
