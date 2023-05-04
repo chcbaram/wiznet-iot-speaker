@@ -8,6 +8,8 @@
 #include "uart.h"
 #include "cli.h"
 #include "log.h"
+#include "button.h"
+#include "qbuffer.h"
 
 
 bool hwInit(void);

@@ -16,7 +16,8 @@ const typedef struct
 
 static led_tbl_t led_tbl[LED_MAX_CH] = 
 {
-  {GPIOB, GPIO_PIN_0,  GPIO_PIN_SET, GPIO_PIN_RESET},
+  {GPIOA, GPIO_PIN_0,  GPIO_PIN_RESET, GPIO_PIN_SET},
+  {GPIOE, GPIO_PIN_3,  GPIO_PIN_RESET, GPIO_PIN_SET},
 };
 
 
@@ -26,7 +27,7 @@ bool ledInit(void)
   GPIO_InitTypeDef   GPIO_InitStructure;
 
 
-  __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOE_CLK_ENABLE();
 
   GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
