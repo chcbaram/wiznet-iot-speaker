@@ -56,4 +56,4 @@ uint32_t swtimerGetCounter(void);
 
 
 
-#endif /* SRC_COMMON_HW_INCLUDE_SWTIMER_H_ */
+#endif 

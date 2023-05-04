@@ -11,6 +11,10 @@ void apInit(void)
   cliOpen(_DEF_UART1, 115200);
 
   logBoot(false);
+
+  gpioPinWrite(_PIN_GPIO_W5300_RST, _DEF_LOW);
+  delay(5);
+  gpioPinWrite(_PIN_GPIO_W5300_RST, _DEF_HIGH);
 }
 
 void apMain(void)

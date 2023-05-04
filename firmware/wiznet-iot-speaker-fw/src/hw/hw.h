@@ -13,6 +13,7 @@
 #include "fmc.h"
 #include "buzzer.h"
 #include "swtimer.h"
+#include "gpio.h"
 
 
 bool hwInit(void);

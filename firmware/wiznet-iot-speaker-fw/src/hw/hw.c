@@ -14,6 +14,7 @@ bool hwInit(void)
   swtimerInit();
   ledInit();
   buttonInit();
+  gpioInit();
   uartInit();
   logOpen(_DEF_UART1, 115200);
 
