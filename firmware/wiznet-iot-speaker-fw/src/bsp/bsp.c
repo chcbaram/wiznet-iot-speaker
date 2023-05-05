@@ -23,6 +23,7 @@ bool bspInit(void)
   __HAL_RCC_GPIOG_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
+
   return true;
 }
 
