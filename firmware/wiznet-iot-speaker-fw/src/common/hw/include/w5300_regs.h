@@ -38,7 +38,7 @@ typedef union
 } reg64_t;
 
 
-typedef union
+typedef struct
 {
   __IO reg16_t MR;              // 0x200 SOCKET0 Mode Register
   __IO reg16_t CR;              // 0x202 SOCKET0 Command Register
@@ -117,9 +117,6 @@ typedef struct
   W5300_REG_SOCKET_t SOCKET[8];
 
 } W5300_REGS_t;
-
-
-
 
 
 #endif
