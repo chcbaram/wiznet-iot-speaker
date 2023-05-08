@@ -47,6 +47,7 @@ static const flash_tbl_t *flash_bank_tbl[FLASH_MAX_BANK] =
 bool flashInit(void)
 {
 
+  logPrintf("[OK] flashInit()\n");
 
 #ifdef _USE_HW_CLI
   cliAdd("flash", cliFlash);

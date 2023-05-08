@@ -69,18 +69,20 @@ bool qspiInit(void)
   {
     if (info.device_id[0] == 0xEF && info.device_id[1] == 0x40 && info.device_id[2] == 0x18)
     {
-      logPrintf("W25Q128JV         \t: OK\r\n");
+      logPrintf("[OK] qspiInit()\n");
+      logPrintf("     W25Q128JV Found\r\n");
       ret = true;
     }
     else
     {
-      logPrintf("W25Q128JV         \t: Fail %X %X %X\r\n", info.device_id[0], info.device_id[1], info.device_id[2]);
+      logPrintf("[OK] qspiInit()\n");
+      logPrintf("     W25Q128JV Not Found %X %X %X\r\n", info.device_id[0], info.device_id[1], info.device_id[2]);
       ret = false;
     }
   }
   else
   {
-    logPrintf("QSPI                \t: Fail\r\n");
+    logPrintf("[NG] qspiInit()\n");
     ret = false;
   }
 
