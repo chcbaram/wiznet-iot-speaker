@@ -3,7 +3,7 @@
 #include "cli.h"
 
 
-#define FLASH_MAX_BANK            2
+#define FLASH_MAX_BANK            1
 #define FLASH_MAX_SECTOR          8
 #define FLASH_PAGE_SIZE           32
 
@@ -328,13 +328,15 @@ void cliFlash(cli_args_t *args)
     }
     else if(args->isStr(0, "write") == true)
     {
-      addr = (uint32_t)args->getData(1);
-      data = (uint8_t )args->getData(2);
+      uint32_t wr_data;
+
+      addr    = (uint32_t)args->getData(1);
+      wr_data = (uint8_t )args->getData(2);
 
       pre_time = millis();
-      flash_ret = flashWrite(addr, &data, 1);
+      flash_ret = flashWrite(addr, &data, 4);
 
-      cliPrintf( "addr : 0x%X\t 0x%02X %dms\n", addr, data, millis()-pre_time);
+      cliPrintf( "addr : 0x%X\t 0x%02X %dms\n", addr, wr_data, millis()-pre_time);
       if (flash_ret)
       {
         cliPrintf("OK\n");
