@@ -114,6 +114,51 @@ Infinite_Loop:
   .size  Default_Handler, .-Default_Handler
 
 
+.section  .text.HardFault_Asm_Handler,"ax",%progbits
+HardFault_Asm_Handler:
+  ;// This version is for Cortex M3, Cortex M4 and Cortex M4F
+  tst    LR, #4               ;// Check EXC_RETURN in Link register bit 2.
+  ite    EQ
+  mrseq  R0, MSP              ;// Stacking was using MSP.
+  mrsne  R0, PSP              ;// Stacking was using PSP.
+  b      HardFault_Handler_C  ;// Stack pointer passed through R0.
+.size  HardFault_Asm_Handler, .-HardFault_Asm_Handler
+
+
+.section  .text.MemManage_Asm_Handler,"ax",%progbits
+MemManage_Asm_Handler:
+  ;// This version is for Cortex M3, Cortex M4 and Cortex M4F
+  tst    LR, #4               ;// Check EXC_RETURN in Link register bit 2.
+  ite    EQ
+  mrseq  R0, MSP              ;// Stacking was using MSP.
+  mrsne  R0, PSP              ;// Stacking was using PSP.
+  b      MemManage_Handler_C  ;// Stack pointer passed through R0.
+.size  MemManage_Asm_Handler, .-MemManage_Asm_Handler
+
+
+.section  .text.BusFault_Asm_Handler,"ax",%progbits
+BusFault_Asm_Handler:
+  ;// This version is for Cortex M3, Cortex M4 and Cortex M4F
+  tst    LR, #4               ;// Check EXC_RETURN in Link register bit 2.
+  ite    EQ
+  mrseq  R0, MSP              ;// Stacking was using MSP.
+  mrsne  R0, PSP              ;// Stacking was using PSP.
+  b      BusFault_Handler_C   ;// Stack pointer passed through R0.
+.size  BusFault_Asm_Handler, .-BusFault_Asm_Handler
+
+
+.section  .text.UsageFault_Asm_Handler,"ax",%progbits
+UsageFault_Asm_Handler:
+  ;// This version is for Cortex M3, Cortex M4 and Cortex M4F
+  tst    LR, #4               ;// Check EXC_RETURN in Link register bit 2.
+  ite    EQ
+  mrseq  R0, MSP              ;// Stacking was using MSP.
+  mrsne  R0, PSP              ;// Stacking was using PSP.
+  b      UsageFault_Handler_C ;// Stack pointer passed through R0.
+.size  UsageFault_Asm_Handler, .-UsageFault_Asm_Handler
+
+
+
 /******************************************************************************
 *
 * The minimal vector table for a Cortex M. Note that the proper constructs
@@ -321,16 +366,16 @@ g_pfnVectors:
    .thumb_set NMI_Handler,Default_Handler
 
    .weak      HardFault_Handler
-   .thumb_set HardFault_Handler,Default_Handler
+   .thumb_set HardFault_Handler,HardFault_Asm_Handler
 
    .weak      MemManage_Handler
-   .thumb_set MemManage_Handler,Default_Handler
+   .thumb_set MemManage_Handler,MemManage_Asm_Handler
 
    .weak      BusFault_Handler
-   .thumb_set BusFault_Handler,Default_Handler
+   .thumb_set BusFault_Handler,BusFault_Asm_Handler
 
    .weak      UsageFault_Handler
-   .thumb_set UsageFault_Handler,Default_Handler
+   .thumb_set UsageFault_Handler,UsageFault_Asm_Handler
 
    .weak      SVC_Handler
    .thumb_set SVC_Handler,Default_Handler

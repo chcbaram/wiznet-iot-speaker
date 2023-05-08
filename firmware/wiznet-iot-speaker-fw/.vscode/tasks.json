@@ -22,6 +22,12 @@
         "kind": "build",
         "isDefault": true
       }
-    }
+    },
+    {
+      "label": "clean",
+      "type": "shell",
+      "command": "cmake --build build --target clean",
+      "problemMatcher": [],
+    }    
   ]
 }

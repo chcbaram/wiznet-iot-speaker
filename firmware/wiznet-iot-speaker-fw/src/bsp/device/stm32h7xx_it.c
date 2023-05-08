@@ -19,6 +19,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "bsp.h"
+#include "fault.h"
 #include "stm32h7xx_it.h"
 
 
@@ -42,8 +43,9 @@ void NMI_Handler(void)
 /**
   * @brief This function handles Hard fault interrupt.
   */
-void HardFault_Handler(void)
+void HardFault_Handler_C(uint32_t *p_stack)
 {
+  faultReset("HardFault", p_stack);
   while (1)
   {
   }
@@ -52,8 +54,9 @@ void HardFault_Handler(void)
 /**
   * @brief This function handles Memory management fault.
   */
-void MemManage_Handler(void)
+void MemManage_Handler_C(uint32_t *p_stack)
 {
+  faultReset("MemManage", p_stack);
   while (1)
   {
   }
@@ -62,8 +65,9 @@ void MemManage_Handler(void)
 /**
   * @brief This function handles Pre-fetch fault, memory access fault.
   */
-void BusFault_Handler(void)
+void BusFault_Handler_C(uint32_t *p_stack)
 {
+  faultReset("BusFault", p_stack);
   while (1)
   {
   }
@@ -72,8 +76,9 @@ void BusFault_Handler(void)
 /**
   * @brief This function handles Undefined instruction or illegal state.
   */
-void UsageFault_Handler(void)
+void UsageFault_Handler_C(uint32_t *p_stack)
 {
+  faultReset("UsageFault", p_stack);
   while (1)
   {
   }
@@ -91,12 +96,6 @@ void SVC_Handler(void)
   */
 void DebugMon_Handler(void)
 {
-  /* USER CODE BEGIN DebugMonitor_IRQn 0 */
-
-  /* USER CODE END DebugMonitor_IRQn 0 */
-  /* USER CODE BEGIN DebugMonitor_IRQn 1 */
-
-  /* USER CODE END DebugMonitor_IRQn 1 */
 }
 
 /**
@@ -104,12 +103,6 @@ void DebugMon_Handler(void)
   */
 void PendSV_Handler(void)
 {
-  /* USER CODE BEGIN PendSV_IRQn 0 */
-
-  /* USER CODE END PendSV_IRQn 0 */
-  /* USER CODE BEGIN PendSV_IRQn 1 */
-
-  /* USER CODE END PendSV_IRQn 1 */
 }
 
 extern void swtimerISR(void);

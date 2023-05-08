@@ -12,6 +12,8 @@
 
 #define _USE_HW_FMC
 #define _USE_HW_BUZZER
+#define _USE_HW_FLASH
+#define _USE_HW_FAULT
 
 
 #define _USE_HW_LED

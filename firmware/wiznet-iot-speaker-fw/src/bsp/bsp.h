@@ -8,21 +8,6 @@
 #include "stm32h7xx_hal.h"
 
 
-typedef struct
-{
-  uint32_t magic_number;
-  uint32_t type;
-
-  uint32_t REG_R0;
-  uint32_t REG_R1;
-  uint32_t REG_R2;
-  uint32_t REG_R3;
-  uint32_t REG_R12;
-  uint32_t REG_LR;
-  uint32_t REG_PC;
-  uint32_t REG_PSR;
-
-} fault_log_t;
 
 
 

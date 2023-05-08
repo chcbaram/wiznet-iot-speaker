@@ -11,6 +11,10 @@
 #include <stdio.h>
 
 
+#include "err_code.h"
+
+
+
 #define _DEF_LED1             0
 #define _DEF_LED2             1
 #define _DEF_LED3             2

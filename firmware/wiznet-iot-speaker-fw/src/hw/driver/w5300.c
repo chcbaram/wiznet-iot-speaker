@@ -4,7 +4,7 @@
 
 
 
-#define SWAP16(x)   ((x<<8) | (x>>8))
+#define SWAP16(x)   (uint16_t)(((uint16_t)x<<8) | ((uint16_t)x>>8))
 
 
 #ifdef _USE_HW_CLI
@@ -176,13 +176,13 @@ bool w5300GetNetInfo(uint8_t ip[4],
   return true;
 }
 
-static void setRTR(uint16_t time_ms)
-{
-  reg16_t reg;
+// static void setRTR(uint16_t time_ms)
+// {
+//   reg16_t reg;
 
-  reg.d16 = time_ms * 10;
-  W5300_REGS->RTR.d16 = SWAP16(reg.d16);
-}
+//   reg.d16 = time_ms * 10;
+//   W5300_REGS->RTR.d16 = SWAP16(reg.d16);
+// }
 
 static uint16_t getRTR(void)
 {
@@ -237,7 +237,7 @@ void cliCmd(cli_args_t *args)
     uint32_t rx_length;
 
 
-    reg.d16 = W5300_REGS->RMSR.d16;
+    reg.d16 = W5300_REGS->RMSR.d16[0];
     reg.d8[0] = 8;
     W5300_REGS->RMSR.d16[0] = reg.d16;
 
@@ -273,6 +273,11 @@ void cliCmd(cli_args_t *args)
         reg16_t reg_port;
         reg16_t reg_size;
         reg16_t reg_data;
+
+        (void)reg_ip;
+        (void)reg_port;
+        (void)reg_size;
+        (void)reg_data;
 
         // cliPrintf("RSR : 0x%08X\n", W5300_REGS->SOCKET[0].RX_RSR.d32);
 

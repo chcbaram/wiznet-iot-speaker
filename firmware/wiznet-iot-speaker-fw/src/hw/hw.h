@@ -15,6 +15,8 @@
 #include "swtimer.h"
 #include "gpio.h"
 #include "w5300.h"
+#include "flash.h"
+#include "fault.h"
 
 
 bool hwInit(void);

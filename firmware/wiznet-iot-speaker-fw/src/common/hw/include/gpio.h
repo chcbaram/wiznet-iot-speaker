@@ -1,6 +1,10 @@
 #ifndef GPIO_H_
 #define GPIO_H_
 
+#ifdef __cplusplus
+ extern "C" {
+#endif
+
 #include "hw_def.h"
 
 
@@ -17,6 +21,10 @@ bool gpioPinRead(uint8_t ch);
 void gpioPinToggle(uint8_t ch);
 
 
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif 
