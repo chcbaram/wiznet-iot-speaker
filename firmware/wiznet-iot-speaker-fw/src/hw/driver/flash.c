@@ -266,96 +266,147 @@ bool flashRead(uint32_t addr, uint8_t *p_data, uint32_t length)
 #ifdef _USE_HW_CLI
 void cliFlash(cli_args_t *args)
 {
-  bool ret = true;
+  bool ret = false;
   uint32_t i;
   uint32_t addr;
   uint32_t length;
-  uint8_t  data;
   uint32_t pre_time;
   bool flash_ret;
 
 
-  if (args->argc == 1)
+  if (args->argc == 1 && args->isStr(0, "info"))
   {
-    if(args->isStr(0, "info") == true)
-    {
-      cliPrintf("flash addr  : 0x%X\n", 0x8000000);
-      cliPrintf("qspi  addr  : 0x%X\n", 0x90000000);
-    }
-    else
-    {
-      ret = false;
-    }
-  }
-  else if (args->argc == 3)
-  {
-    if(args->isStr(0, "read") == true)
-    {
-      addr   = (uint32_t)args->getData(1);
-      length = (uint32_t)args->getData(2);
-
-      for (i=0; i<length; i++)
-      {
-        flash_ret = flashRead(addr+i, &data, 1);
-
-        if (flash_ret == true)
-        {
-          cliPrintf( "addr : 0x%X\t 0x%02X\n", addr+i, data);
-        }
-        else
-        {
-          cliPrintf( "addr : 0x%X\t Fail\n", addr+i);
-        }
-      }
-    }
-    else if(args->isStr(0, "erase") == true)
-    {
-      addr   = (uint32_t)args->getData(1);
-      length = (uint32_t)args->getData(2);
-
-      pre_time = millis();
-      flash_ret = flashErase(addr, length);
-
-      cliPrintf( "addr : 0x%X\t len : %d %d ms\n", addr, length, (millis()-pre_time));
-      if (flash_ret)
-      {
-        cliPrintf("OK\n");
-      }
-      else
-      {
-        cliPrintf("FAIL\n");
-      }
-    }
-    else if(args->isStr(0, "write") == true)
-    {
-      uint32_t wr_data;
-
-      addr    = (uint32_t)args->getData(1);
-      wr_data = (uint8_t )args->getData(2);
-
-      pre_time = millis();
-      flash_ret = flashWrite(addr, &data, 4);
-
-      cliPrintf( "addr : 0x%X\t 0x%02X %dms\n", addr, wr_data, millis()-pre_time);
-      if (flash_ret)
-      {
-        cliPrintf("OK\n");
-      }
-      else
-      {
-        cliPrintf("FAIL\n");
-      }
-    }
-    else
-    {
-      ret = false;
-    }
-  }
-  else
-  {
+    cliPrintf("flash addr  : 0x%X\n", 0x8000000);
+    cliPrintf("qspi  addr  : 0x%X\n", 0x90000000);
     ret = false;
   }
 
+  if(args->argc == 3 && args->isStr(0, "read"))
+  {
+    uint8_t data;
+
+    addr   = (uint32_t)args->getData(1);
+    length = (uint32_t)args->getData(2);
+
+    for (i=0; i<length; i++)
+    {
+      flash_ret = flashRead(addr+i, &data, 1);
+
+      if (flash_ret == true)
+      {
+        cliPrintf( "addr : 0x%X\t 0x%02X\n", addr+i, data);
+      }
+      else
+      {
+        cliPrintf( "addr : 0x%X\t Fail\n", addr+i);
+      }
+    }
+    ret = true;
+  }
+    
+  if(args->argc == 3 && args->isStr(0, "erase"))
+  {
+    addr   = (uint32_t)args->getData(1);
+    length = (uint32_t)args->getData(2);
+
+    pre_time = millis();
+    flash_ret = flashErase(addr, length);
+
+    cliPrintf( "addr : 0x%X\t len : %d %d ms\n", addr, length, (millis()-pre_time));
+    if (flash_ret)
+    {
+      cliPrintf("OK\n");
+    }
+    else
+    {
+      cliPrintf("FAIL\n");
+    }
+
+    ret = true;
+  }
+    
+  if(args->argc == 3 && args->isStr(0, "write"))
+  {
+    uint32_t data;
+
+    addr = (uint32_t)args->getData(1);
+    data = (uint32_t)args->getData(2);
+
+    pre_time = millis();
+    flash_ret = flashWrite(addr, (uint8_t *)&data, 4);
+
+    cliPrintf( "addr : 0x%X\t 0x%X %dms\n", addr, data, millis()-pre_time);
+    if (flash_ret)
+    {
+      cliPrintf("OK\n");
+    }
+    else
+    {
+      cliPrintf("FAIL\n");
+    }
+    ret = true;
+  }
+
+  if(args->argc == 3 && args->isStr(0, "check"))
+  {
+    uint32_t data = 0;
+
+
+    addr   = (uint32_t)args->getData(1);
+    length = (uint32_t)args->getData(2);
+
+    do
+    {
+      cliPrintf("flashErase()..");
+      if (flashErase(addr, length*4) == false)
+      {
+        cliPrintf("Fail\n");
+        break;
+      }
+      cliPrintf("OK\n");
+
+      cliPrintf("flashWrite()..");
+      for (uint32_t i=0; i<length; i++)
+      {
+        data = i;
+        if (flashWrite(addr + i*4, (uint8_t *)&data, 4) == false)
+        {
+          cliPrintf("Fail %d\n", i);
+          break;
+        }
+      }
+      cliPrintf("OK\n");
+
+      cliPrintf("flashRead() ..");
+      for (uint32_t i=0; i<1024*1024/4; i++)
+      {
+        data = 0;
+        if (flashRead(qspiGetAddr() + i*4, (uint8_t *)&data, 4) == false)
+        {
+          cliPrintf("Fail %d\n", i);
+          break;
+        }
+        if (data != i)
+        {
+          cliPrintf("Check Fail %d\n", i);
+          break;
+        }
+      }  
+      cliPrintf("OK\n");
+
+
+      cliPrintf("flashErase()..");
+      if (flashErase(addr, length*4) == false)
+      {
+        cliPrintf("Fail\n");
+        break;
+      }
+      cliPrintf("OK\n");  
+    } while (0);
+    
+
+    ret = true;
+  }
 
   if (ret == false)
   {
@@ -363,6 +414,7 @@ void cliFlash(cli_args_t *args)
     cliPrintf( "flash read  [addr] [length]\n");
     cliPrintf( "flash erase [addr] [length]\n");
     cliPrintf( "flash write [addr] [data]\n");
+    cliPrintf( "flash check [addr] [count]\n");
   }
 
 }

@@ -13,6 +13,7 @@
 #define _USE_HW_FMC
 #define _USE_HW_BUZZER
 #define _USE_HW_FLASH
+#define _USE_HW_QSPI
 #define _USE_HW_FAULT
 
 

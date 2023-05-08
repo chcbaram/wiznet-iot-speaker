@@ -25,6 +25,7 @@ bool hwInit(void)
   logPrintf("\n");
 
   faultInit();
+  qspiInit();
   flashInit();
   fmcInit();
   buzzerInit();

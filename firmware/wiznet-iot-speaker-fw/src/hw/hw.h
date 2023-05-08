@@ -17,6 +17,7 @@
 #include "w5300.h"
 #include "flash.h"
 #include "fault.h"
+#include "qspi.h"
 
 
 bool hwInit(void);

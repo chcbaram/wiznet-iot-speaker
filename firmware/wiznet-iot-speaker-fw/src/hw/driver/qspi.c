@@ -33,14 +33,15 @@ typedef struct {
 
 static bool is_init = false;
 
-uint8_t BSP_QSPI_Init       (void);
-uint8_t BSP_QSPI_DeInit     (void);
-uint8_t BSP_QSPI_Read       (uint8_t* p_data, uint32_t addr, uint32_t length);
-uint8_t BSP_QSPI_Write      (uint8_t* p_data, uint32_t addr, uint32_t length);
+uint8_t BSP_QSPI_Init(void);
+uint8_t BSP_QSPI_DeInit(void);
+uint8_t BSP_QSPI_Read(uint8_t* p_data, uint32_t addr, uint32_t length);
+uint8_t BSP_QSPI_Write(uint8_t* p_data, uint32_t addr, uint32_t length);
 uint8_t BSP_QSPI_Erase_Block(uint32_t block_addr);
+uint8_t BSP_QSPI_Erase_Sector(uint32_t SectorAddress);
 uint8_t BSP_QSPI_Erase_Chip (void);
-uint8_t BSP_QSPI_GetStatus  (void);
-uint8_t BSP_QSPI_GetInfo    (QSPI_Info* p_info);
+uint8_t BSP_QSPI_GetStatus(void);
+uint8_t BSP_QSPI_GetInfo(QSPI_Info* p_info);
 uint8_t BSP_QSPI_EnableMemoryMappedMode(void);
 uint8_t BSP_QSPI_GetID(QSPI_Info* p_info);
 uint8_t BSP_QSPI_Config(void);
@@ -170,6 +171,21 @@ bool qspiEraseBlock(uint32_t block_addr)
   }
 }
 
+bool qspiEraseSector(uint32_t sector_addr)
+{
+  uint8_t ret;
+
+  ret = BSP_QSPI_Erase_Sector(sector_addr);
+
+  if (ret == QSPI_OK)
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }  
+}
 bool qspiErase(uint32_t addr, uint32_t length)
 {
   bool ret = true;
@@ -182,7 +198,7 @@ bool qspiErase(uint32_t addr, uint32_t length)
 
 
   flash_length = W25Q128FV_FLASH_SIZE;
-  block_size   = W25Q128FV_SUBSECTOR_SIZE;
+  block_size   = W25Q128FV_SECTOR_SIZE;
 
 
   if ((addr > flash_length) || ((addr+length) > flash_length))
@@ -312,17 +328,17 @@ uint8_t BSP_QSPI_Init(void)
 
 
   /* QSPI initialization */
-  /* ClockPrescaler set to 1, so QSPI clock = 200MHz / (1+1) = 100MHz */
+  /* ClockPrescaler set to 1, so QSPI clock = 200MHz / (2) = 100MHz */
   hqspi.Init.FifoThreshold       = 4;
   hqspi.Init.DualQuad            = HAL_OSPI_DUALQUAD_DISABLE;
   hqspi.Init.MemoryType          = HAL_OSPI_MEMTYPE_MICRON;
   hqspi.Init.DeviceSize          = POSITION_VAL(W25Q128FV_FLASH_SIZE) - 1;
   hqspi.Init.ChipSelectHighTime  = 5;
   hqspi.Init.FreeRunningClock    = HAL_OSPI_FREERUNCLK_DISABLE;
-  hqspi.Init.ClockMode           = HAL_OSPI_CLOCK_MODE_3;
+  hqspi.Init.ClockMode           = HAL_OSPI_CLOCK_MODE_0;
   hqspi.Init.WrapSize            = HAL_OSPI_WRAP_NOT_SUPPORTED;
-  hqspi.Init.ClockPrescaler      = 1;
-  hqspi.Init.SampleShifting      = HAL_OSPI_SAMPLE_SHIFTING_NONE;
+  hqspi.Init.ClockPrescaler      = 2;
+  hqspi.Init.SampleShifting      = HAL_OSPI_SAMPLE_SHIFTING_HALFCYCLE;
   hqspi.Init.DelayHoldQuarterCycle = HAL_OSPI_DHQC_DISABLE;
   hqspi.Init.ChipSelectBoundary  = 0;
   hqspi.Init.DelayBlockBypass    = HAL_OSPI_DELAY_BLOCK_BYPASSED;
@@ -414,14 +430,19 @@ uint8_t BSP_QSPI_Read(uint8_t* p_data, uint32_t addr, uint32_t length)
   /* Initialize the read command */
   s_command.OperationType      = HAL_OSPI_OPTYPE_COMMON_CFG;
   s_command.FlashId            = HAL_OSPI_FLASH_ID_1;
-  s_command.InstructionMode    = HAL_OSPI_INSTRUCTION_4_LINES;
+  
+  s_command.InstructionMode    = HAL_OSPI_INSTRUCTION_1_LINE;
   s_command.InstructionDtrMode = HAL_OSPI_INSTRUCTION_DTR_DISABLE;
   s_command.InstructionSize    = HAL_OSPI_INSTRUCTION_8_BITS;
   s_command.Instruction        = QUAD_INOUT_FAST_READ_CMD;
+  
   s_command.AddressMode        = HAL_OSPI_ADDRESS_4_LINES;
   s_command.AddressDtrMode     = HAL_OSPI_ADDRESS_DTR_DISABLE;
   s_command.AddressSize        = HAL_OSPI_ADDRESS_24_BITS;
   s_command.AlternateBytesMode = HAL_OSPI_ALTERNATE_BYTES_4_LINES;
+  s_command.AlternateBytesSize = HAL_OSPI_ALTERNATE_BYTES_8_BITS;
+  s_command.AlternateBytes     = 0;
+
   s_command.DataMode           = HAL_OSPI_DATA_4_LINES;
   s_command.DataDtrMode        = HAL_OSPI_DATA_DTR_DISABLE;
   s_command.DummyCycles        = W25Q128FV_DUMMY_CYCLES_READ_QUAD;
@@ -449,11 +470,11 @@ uint8_t BSP_QSPI_Read(uint8_t* p_data, uint32_t addr, uint32_t length)
 
 uint8_t BSP_QSPI_Write(uint8_t* p_data, uint32_t addr, uint32_t length)
 {
-  OSPI_RegularCmdTypeDef s_command;
+  OSPI_RegularCmdTypeDef s_command = {0};
   uint32_t end_addr, current_size, current_addr;
 
   /* Calculation of the size between the write address and the end of the page */
-  current_size = W25Q128FV_PAGE_SIZE - (WriteAddr % W25Q128FV_PAGE_SIZE);
+  current_size = W25Q128FV_PAGE_SIZE - (addr % W25Q128FV_PAGE_SIZE);
 
   /* Check if the size of the data is less than the remaining place in the page */
   if (current_size > length)
@@ -472,10 +493,13 @@ uint8_t BSP_QSPI_Write(uint8_t* p_data, uint32_t addr, uint32_t length)
   s_command.InstructionDtrMode = HAL_OSPI_INSTRUCTION_DTR_DISABLE;
   s_command.InstructionSize    = HAL_OSPI_INSTRUCTION_8_BITS;
   s_command.Instruction        = QUAD_IN_FAST_PROG_CMD;
+  
   s_command.AddressMode        = HAL_OSPI_ADDRESS_1_LINE;
   s_command.AddressDtrMode     = HAL_OSPI_ADDRESS_DTR_DISABLE;
   s_command.AddressSize        = HAL_OSPI_ADDRESS_24_BITS;
+  
   s_command.AlternateBytesMode = HAL_OSPI_ALTERNATE_BYTES_NONE;
+  
   s_command.DataMode           = HAL_OSPI_DATA_4_LINES;
   s_command.DataDtrMode        = HAL_OSPI_DATA_DTR_DISABLE;
   s_command.DummyCycles        = 0;
@@ -501,7 +525,7 @@ uint8_t BSP_QSPI_Write(uint8_t* p_data, uint32_t addr, uint32_t length)
     }
 
     /* Transmission of the data */
-    if (HAL_OSPI_Transmit(&hqspi, pData, HAL_OSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
+    if (HAL_OSPI_Transmit(&hqspi, p_data, HAL_OSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
     {
       return QSPI_ERROR;
     }
@@ -514,7 +538,7 @@ uint8_t BSP_QSPI_Write(uint8_t* p_data, uint32_t addr, uint32_t length)
 
     /* Update the address and size variables for next page programming */
     current_addr += current_size;
-    pData += current_size;
+    p_data += current_size;
     current_size = ((current_addr + W25Q128FV_PAGE_SIZE) > end_addr) ? (end_addr - current_addr) : W25Q128FV_PAGE_SIZE;
   } while (current_addr < end_addr);
 
@@ -523,7 +547,7 @@ uint8_t BSP_QSPI_Write(uint8_t* p_data, uint32_t addr, uint32_t length)
 
 uint8_t BSP_QSPI_Erase_Block(uint32_t BlockAddress)
 {
-  OSPI_RegularCmdTypeDef s_command;
+  OSPI_RegularCmdTypeDef s_command = {0};
 
   /* Initialize the erase command */
   s_command.OperationType      = HAL_OSPI_OPTYPE_COMMON_CFG;
@@ -532,10 +556,59 @@ uint8_t BSP_QSPI_Erase_Block(uint32_t BlockAddress)
   s_command.InstructionDtrMode = HAL_OSPI_INSTRUCTION_DTR_DISABLE;
   s_command.InstructionSize    = HAL_OSPI_INSTRUCTION_8_BITS;
   s_command.Instruction        = SUBSECTOR_ERASE_CMD;
+  
   s_command.AddressMode        = HAL_OSPI_ADDRESS_1_LINE;
   s_command.AddressDtrMode     = HAL_OSPI_ADDRESS_DTR_DISABLE;
   s_command.AddressSize        = HAL_OSPI_ADDRESS_24_BITS;
+  
   s_command.AlternateBytesMode = HAL_OSPI_ALTERNATE_BYTES_NONE;
+  
+  s_command.DataMode           = HAL_OSPI_DATA_NONE;
+  s_command.DataDtrMode        = HAL_OSPI_DATA_DTR_DISABLE;
+  s_command.DummyCycles        = 0;
+  s_command.DQSMode            = HAL_OSPI_DQS_DISABLE;
+  s_command.SIOOMode           = HAL_OSPI_SIOO_INST_EVERY_CMD;
+
+
+  /* Enable write operations */
+  if (QSPI_WriteEnable(&hqspi) != QSPI_OK)
+  {
+    return QSPI_ERROR;
+  }
+
+  /* Send the command */
+  if (HAL_OSPI_Command(&hqspi, &s_command, HAL_OSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
+  {
+    return QSPI_ERROR;
+  }
+
+  /* Configure automatic polling mode to wait for end of erase */
+  if (QSPI_AutoPollingMemReady(&hqspi, W25Q128FV_SUBSECTOR_ERASE_MAX_TIME) != QSPI_OK)
+  {
+    return QSPI_ERROR;
+  }
+
+  return QSPI_OK;
+}
+
+uint8_t BSP_QSPI_Erase_Sector(uint32_t SectorAddress)
+{
+  OSPI_RegularCmdTypeDef s_command = {0};
+
+  /* Initialize the erase command */
+  s_command.OperationType      = HAL_OSPI_OPTYPE_COMMON_CFG;
+  s_command.FlashId            = HAL_OSPI_FLASH_ID_1;
+  s_command.InstructionMode    = HAL_OSPI_INSTRUCTION_1_LINE;
+  s_command.InstructionDtrMode = HAL_OSPI_INSTRUCTION_DTR_DISABLE;
+  s_command.InstructionSize    = HAL_OSPI_INSTRUCTION_8_BITS;
+  s_command.Instruction        = SECTOR_ERASE_CMD;
+  
+  s_command.AddressMode        = HAL_OSPI_ADDRESS_1_LINE;
+  s_command.AddressDtrMode     = HAL_OSPI_ADDRESS_DTR_DISABLE;
+  s_command.AddressSize        = HAL_OSPI_ADDRESS_24_BITS;
+  
+  s_command.AlternateBytesMode = HAL_OSPI_ALTERNATE_BYTES_NONE;
+  
   s_command.DataMode           = HAL_OSPI_DATA_NONE;
   s_command.DataDtrMode        = HAL_OSPI_DATA_DTR_DISABLE;
   s_command.DummyCycles        = 0;
@@ -566,7 +639,7 @@ uint8_t BSP_QSPI_Erase_Block(uint32_t BlockAddress)
 
 uint8_t BSP_QSPI_Erase_Chip(void)
 {
-  OSPI_RegularCmdTypeDef s_command;
+  OSPI_RegularCmdTypeDef s_command = {0};
 
   /* Initialize the erase command */
   s_command.OperationType      = HAL_OSPI_OPTYPE_COMMON_CFG;
@@ -575,10 +648,13 @@ uint8_t BSP_QSPI_Erase_Chip(void)
   s_command.InstructionDtrMode = HAL_OSPI_INSTRUCTION_DTR_DISABLE;
   s_command.InstructionSize    = HAL_OSPI_INSTRUCTION_8_BITS;
   s_command.Instruction        = BULK_ERASE_CMD;
+  
   s_command.AddressMode        = HAL_OSPI_ADDRESS_NONE;
   s_command.AddressDtrMode     = HAL_OSPI_ADDRESS_DTR_DISABLE;
   s_command.AddressSize        = HAL_OSPI_ADDRESS_24_BITS;
+  
   s_command.AlternateBytesMode = HAL_OSPI_ALTERNATE_BYTES_NONE;
+  
   s_command.DataMode           = HAL_OSPI_DATA_NONE;
   s_command.DataDtrMode        = HAL_OSPI_DATA_DTR_DISABLE;
   s_command.DummyCycles        = 0;
@@ -608,7 +684,7 @@ uint8_t BSP_QSPI_Erase_Chip(void)
 
 uint8_t BSP_QSPI_GetStatus(void)
 {
-  OSPI_RegularCmdTypeDef s_command;
+  OSPI_RegularCmdTypeDef s_command = {0};
   uint8_t reg;
 
   /* Initialize the read flag status register command */
@@ -618,10 +694,13 @@ uint8_t BSP_QSPI_GetStatus(void)
   s_command.InstructionDtrMode = HAL_OSPI_INSTRUCTION_DTR_DISABLE;
   s_command.InstructionSize    = HAL_OSPI_INSTRUCTION_8_BITS;
   s_command.Instruction        = READ_FLAG_STATUS_REG_CMD;
+  
   s_command.AddressMode        = HAL_OSPI_ADDRESS_NONE;
   s_command.AddressDtrMode     = HAL_OSPI_ADDRESS_DTR_DISABLE;
   s_command.AddressSize        = HAL_OSPI_ADDRESS_24_BITS;
+  
   s_command.AlternateBytesMode = HAL_OSPI_ALTERNATE_BYTES_NONE;
+  
   s_command.DataMode           = HAL_OSPI_DATA_1_LINE;
   s_command.DataDtrMode        = HAL_OSPI_DATA_DTR_DISABLE;
   s_command.DummyCycles        = 0;
@@ -663,7 +742,7 @@ uint8_t BSP_QSPI_GetStatus(void)
 
 uint8_t BSP_QSPI_GetID(QSPI_Info* p_info)
 {
-  OSPI_RegularCmdTypeDef s_command;
+  OSPI_RegularCmdTypeDef s_command = {0};
 
 
   /* Initialize the read flag status register command */
@@ -673,10 +752,13 @@ uint8_t BSP_QSPI_GetID(QSPI_Info* p_info)
   s_command.InstructionDtrMode = HAL_OSPI_INSTRUCTION_DTR_DISABLE;
   s_command.InstructionSize    = HAL_OSPI_INSTRUCTION_8_BITS;
   s_command.Instruction        = READ_ID_CMD;
+  
   s_command.AddressMode        = HAL_OSPI_ADDRESS_NONE;
   s_command.AddressDtrMode     = HAL_OSPI_ADDRESS_DTR_DISABLE;
   s_command.AddressSize        = HAL_OSPI_ADDRESS_24_BITS;
+  
   s_command.AlternateBytesMode = HAL_OSPI_ALTERNATE_BYTES_NONE;
+  
   s_command.DataMode           = HAL_OSPI_DATA_1_LINE;
   s_command.DataDtrMode        = HAL_OSPI_DATA_DTR_DISABLE;
   s_command.DummyCycles        = 0;
@@ -692,7 +774,7 @@ uint8_t BSP_QSPI_GetID(QSPI_Info* p_info)
   }
 
   /* Reception of the data */
-  if (HAL_OSPI_Receive(&hqspi, p_info->device_id, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
+  if (HAL_OSPI_Receive(&hqspi, p_info->device_id, HAL_OSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
   {
     return QSPI_ERROR;
   }
@@ -714,29 +796,42 @@ uint8_t BSP_QSPI_GetInfo(QSPI_Info* p_info)
 
 uint8_t BSP_QSPI_EnableMemoryMappedMode(void)
 {
-  QSPI_CommandTypeDef      s_command;
-  QSPI_MemoryMappedTypeDef s_mem_mapped_cfg;
+  OSPI_RegularCmdTypeDef   s_command = {0};
+  OSPI_MemoryMappedTypeDef s_mem_mapped_cfg = {0};
 
   /* Configure the command for the read instruction */
-  s_command.InstructionMode   = QSPI_INSTRUCTION_1_LINE;
-  s_command.Instruction       = QUAD_INOUT_FAST_READ_CMD;
-  s_command.AddressMode       = QSPI_ADDRESS_4_LINES;
-  s_command.AddressSize       = QSPI_ADDRESS_24_BITS;
+  s_command.OperationType      = HAL_OSPI_OPTYPE_READ_CFG;
+  s_command.FlashId            = HAL_OSPI_FLASH_ID_1;
+  s_command.InstructionMode    = HAL_OSPI_INSTRUCTION_1_LINE;
+  s_command.InstructionDtrMode = HAL_OSPI_INSTRUCTION_DTR_DISABLE;
+  s_command.InstructionSize    = HAL_OSPI_INSTRUCTION_8_BITS;
+  s_command.Instruction        = QUAD_INOUT_FAST_READ_CMD;
+  
+  s_command.AddressMode        = HAL_OSPI_ADDRESS_4_LINES;
+  s_command.AddressDtrMode     = HAL_OSPI_ADDRESS_DTR_DISABLE;
+  s_command.AddressSize        = HAL_OSPI_ADDRESS_24_BITS;
+  
+  s_command.AlternateBytesMode = HAL_OSPI_ALTERNATE_BYTES_4_LINES;
+  s_command.AlternateBytesSize = HAL_OSPI_ALTERNATE_BYTES_8_BITS;
+  s_command.AlternateBytes     = (1<<5);
+  
+  s_command.DataMode           = HAL_OSPI_DATA_4_LINES;
+  s_command.DataDtrMode        = HAL_OSPI_DATA_DTR_DISABLE;
+  s_command.DummyCycles        = W25Q128FV_DUMMY_CYCLES_READ_QUAD;
+  s_command.DQSMode            = HAL_OSPI_DQS_DISABLE;
+  s_command.SIOOMode           = HAL_OSPI_SIOO_INST_EVERY_CMD;
 
-  s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_4_LINES;
-  s_command.AlternateBytesSize= QSPI_ALTERNATE_BYTES_8_BITS;
-  s_command.AlternateBytes    = (1<<5);
 
-  s_command.DataMode          = QSPI_DATA_4_LINES;
-  s_command.DummyCycles       = W25Q128FV_DUMMY_CYCLES_READ_QUAD;
-  s_command.DdrMode           = QSPI_DDR_MODE_DISABLE;
-  s_command.DdrHoldHalfCycle  = QSPI_DDR_HHC_ANALOG_DELAY;
-  s_command.SIOOMode          = QSPI_SIOO_INST_ONLY_FIRST_CMD;
+  /* Configure the command */
+  if (HAL_OSPI_Command(&hqspi, &s_command, HAL_OSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
+  {
+    return QSPI_ERROR;
+  }
 
   /* Configure the memory mapped mode */
-  s_mem_mapped_cfg.TimeOutActivation = QSPI_TIMEOUT_COUNTER_DISABLE;
+  s_mem_mapped_cfg.TimeOutActivation = HAL_OSPI_TIMEOUT_COUNTER_DISABLE;
 
-  if (HAL_QSPI_MemoryMapped(&hqspi, &s_command, &s_mem_mapped_cfg) != HAL_OK)
+  if (HAL_OSPI_MemoryMapped(&hqspi, &s_mem_mapped_cfg) != HAL_OK)
   {
     return QSPI_ERROR;
   }
@@ -744,36 +839,45 @@ uint8_t BSP_QSPI_EnableMemoryMappedMode(void)
   return QSPI_OK;
 }
 
-static uint8_t QSPI_ResetMemory(QSPI_HandleTypeDef *hqspi)
+static uint8_t QSPI_ResetMemory(OSPI_HandleTypeDef *p_hqspi)
 {
-  QSPI_CommandTypeDef s_command;
+  OSPI_RegularCmdTypeDef s_command = {0};
 
   /* Initialize the reset enable command */
-  s_command.InstructionMode   = QSPI_INSTRUCTION_1_LINE;
-  s_command.Instruction       = RESET_ENABLE_CMD;
-  s_command.AddressMode       = QSPI_ADDRESS_NONE;
-  s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
-  s_command.DataMode          = QSPI_DATA_NONE;
-  s_command.DummyCycles       = 0;
-  s_command.DdrMode           = QSPI_DDR_MODE_DISABLE;
-  s_command.DdrHoldHalfCycle  = QSPI_DDR_HHC_ANALOG_DELAY;
-  s_command.SIOOMode          = QSPI_SIOO_INST_EVERY_CMD;
+  s_command.OperationType      = HAL_OSPI_OPTYPE_COMMON_CFG;
+  s_command.FlashId            = HAL_OSPI_FLASH_ID_1;
+  s_command.InstructionMode    = HAL_OSPI_INSTRUCTION_1_LINE;
+  s_command.InstructionDtrMode = HAL_OSPI_INSTRUCTION_DTR_DISABLE;
+  s_command.InstructionSize    = HAL_OSPI_INSTRUCTION_8_BITS;
+  s_command.Instruction        = RESET_ENABLE_CMD;
+  
+  s_command.AddressMode        = HAL_OSPI_ADDRESS_NONE;
+  s_command.AddressDtrMode     = HAL_OSPI_ADDRESS_DTR_DISABLE;
+  s_command.AddressSize        = HAL_OSPI_ADDRESS_24_BITS;
+  
+  s_command.AlternateBytesMode = HAL_OSPI_ALTERNATE_BYTES_NONE;
+  
+  s_command.DataMode           = HAL_OSPI_DATA_NONE;
+  s_command.DataDtrMode        = HAL_OSPI_DATA_DTR_DISABLE;
+  s_command.DummyCycles        = 0;
+  s_command.DQSMode            = HAL_OSPI_DQS_DISABLE;
+  s_command.SIOOMode           = HAL_OSPI_SIOO_INST_EVERY_CMD;
 
   /* Send the command */
-  if (HAL_QSPI_Command(hqspi, &s_command, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
+  if (HAL_OSPI_Command(p_hqspi, &s_command, HAL_OSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
   {
     return QSPI_ERROR;
   }
 
   /* Send the reset memory command */
   s_command.Instruction = RESET_MEMORY_CMD;
-  if (HAL_QSPI_Command(hqspi, &s_command, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
+  if (HAL_OSPI_Command(p_hqspi, &s_command, HAL_OSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
   {
     return QSPI_ERROR;
   }
 
   /* Configure automatic polling mode to wait the memory is ready */
-  if (QSPI_AutoPollingMemReady(hqspi, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != QSPI_OK)
+  if (QSPI_AutoPollingMemReady(p_hqspi, HAL_OSPI_TIMEOUT_DEFAULT_VALUE) != QSPI_OK)
   {
     return QSPI_ERROR;
   }
@@ -781,23 +885,42 @@ static uint8_t QSPI_ResetMemory(QSPI_HandleTypeDef *hqspi)
   return QSPI_OK;
 }
 
-static uint8_t QSPI_WriteEnable(QSPI_HandleTypeDef *hqspi)
+static uint8_t QSPI_WriteEnable(OSPI_HandleTypeDef *p_hqspi)
 {
-  QSPI_CommandTypeDef     s_command;
-  QSPI_AutoPollingTypeDef s_config;
+  OSPI_RegularCmdTypeDef  s_command = {0};
+  OSPI_AutoPollingTypeDef s_config = {0};
 
   /* Enable write operations */
-  s_command.InstructionMode   = QSPI_INSTRUCTION_1_LINE;
-  s_command.Instruction       = WRITE_ENABLE_CMD;
-  s_command.AddressMode       = QSPI_ADDRESS_NONE;
-  s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
-  s_command.DataMode          = QSPI_DATA_NONE;
-  s_command.DummyCycles       = 0;
-  s_command.DdrMode           = QSPI_DDR_MODE_DISABLE;
-  s_command.DdrHoldHalfCycle  = QSPI_DDR_HHC_ANALOG_DELAY;
-  s_command.SIOOMode          = QSPI_SIOO_INST_EVERY_CMD;
+  s_command.OperationType      = HAL_OSPI_OPTYPE_COMMON_CFG;
+  s_command.FlashId            = HAL_OSPI_FLASH_ID_1;
+  s_command.InstructionMode    = HAL_OSPI_INSTRUCTION_1_LINE;
+  s_command.InstructionDtrMode = HAL_OSPI_INSTRUCTION_DTR_DISABLE;
+  s_command.InstructionSize    = HAL_OSPI_INSTRUCTION_8_BITS;
+  s_command.Instruction        = WRITE_ENABLE_CMD;
+  
+  s_command.AddressMode        = HAL_OSPI_ADDRESS_NONE;
+  s_command.AddressDtrMode     = HAL_OSPI_ADDRESS_DTR_DISABLE;
+  s_command.AddressSize        = HAL_OSPI_ADDRESS_24_BITS;
+  
+  s_command.AlternateBytesMode = HAL_OSPI_ALTERNATE_BYTES_NONE;
+  
+  s_command.DataMode           = HAL_OSPI_DATA_NONE;
+  s_command.DataDtrMode        = HAL_OSPI_DATA_DTR_DISABLE;
+  s_command.DummyCycles        = 0;
+  s_command.DQSMode            = HAL_OSPI_DQS_DISABLE;
+  s_command.SIOOMode           = HAL_OSPI_SIOO_INST_EVERY_CMD;
+  s_command.NbData             = 0;
 
-  if (HAL_QSPI_Command(hqspi, &s_command, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
+
+  if (HAL_OSPI_Command(p_hqspi, &s_command, HAL_OSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
+  {
+    return QSPI_ERROR;
+  }
+
+  s_command.Instruction    = READ_STATUS_REG_CMD;
+  s_command.DataMode       = HAL_OSPI_DATA_1_LINE;
+  s_command.NbData         = 1;
+  if (HAL_OSPI_Command(p_hqspi, &s_command, HAL_OSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
   {
     return QSPI_ERROR;
   }
@@ -805,15 +928,11 @@ static uint8_t QSPI_WriteEnable(QSPI_HandleTypeDef *hqspi)
   /* Configure automatic polling mode to wait for write enabling */
   s_config.Match           = W25Q128FV_SR_WREN;
   s_config.Mask            = W25Q128FV_SR_WREN;
-  s_config.MatchMode       = QSPI_MATCH_MODE_AND;
-  s_config.StatusBytesSize = 1;
+  s_config.MatchMode       = HAL_OSPI_MATCH_MODE_AND;
   s_config.Interval        = 0x10;
-  s_config.AutomaticStop   = QSPI_AUTOMATIC_STOP_ENABLE;
+  s_config.AutomaticStop   = HAL_OSPI_AUTOMATIC_STOP_ENABLE;
 
-  s_command.Instruction    = READ_STATUS_REG_CMD;
-  s_command.DataMode       = QSPI_DATA_1_LINE;
-
-  if (HAL_QSPI_AutoPolling(hqspi, &s_command, &s_config, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
+  if (HAL_OSPI_AutoPolling(p_hqspi, &s_config, HAL_OSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
   {
     return QSPI_ERROR;
   }
@@ -821,30 +940,45 @@ static uint8_t QSPI_WriteEnable(QSPI_HandleTypeDef *hqspi)
   return QSPI_OK;
 }
 
-static uint8_t QSPI_AutoPollingMemReady(QSPI_HandleTypeDef *hqspi, uint32_t Timeout)
+static uint8_t QSPI_AutoPollingMemReady(OSPI_HandleTypeDef *p_hqspi, uint32_t Timeout)
 {
-  QSPI_CommandTypeDef     s_command;
-  QSPI_AutoPollingTypeDef s_config;
+  OSPI_RegularCmdTypeDef  s_command = {0};
+  OSPI_AutoPollingTypeDef s_config = {0};
 
   /* Configure automatic polling mode to wait for memory ready */
-  s_command.InstructionMode   = QSPI_INSTRUCTION_1_LINE;
-  s_command.Instruction       = READ_STATUS_REG_CMD;
-  s_command.AddressMode       = QSPI_ADDRESS_NONE;
-  s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
-  s_command.DataMode          = QSPI_DATA_1_LINE;
-  s_command.DummyCycles       = 0;
-  s_command.DdrMode           = QSPI_DDR_MODE_DISABLE;
-  s_command.DdrHoldHalfCycle  = QSPI_DDR_HHC_ANALOG_DELAY;
-  s_command.SIOOMode          = QSPI_SIOO_INST_EVERY_CMD;
+  s_command.OperationType      = HAL_OSPI_OPTYPE_COMMON_CFG;
+  s_command.FlashId            = HAL_OSPI_FLASH_ID_1;
+  s_command.InstructionMode    = HAL_OSPI_INSTRUCTION_1_LINE;
+  s_command.InstructionDtrMode = HAL_OSPI_INSTRUCTION_DTR_DISABLE;
+  s_command.InstructionSize    = HAL_OSPI_INSTRUCTION_8_BITS;
+  s_command.Instruction        = READ_STATUS_REG_CMD;
+  
+  s_command.AddressMode        = HAL_OSPI_ADDRESS_NONE;
+  s_command.AddressDtrMode     = HAL_OSPI_ADDRESS_DTR_DISABLE;
+  s_command.AddressSize        = HAL_OSPI_ADDRESS_24_BITS;
+  
+  s_command.AlternateBytesMode = HAL_OSPI_ALTERNATE_BYTES_NONE;
+  
+  s_command.DataMode           = HAL_OSPI_DATA_1_LINE;
+  s_command.DataDtrMode        = HAL_OSPI_DATA_DTR_DISABLE;
+  s_command.DummyCycles        = 0;
+  s_command.DQSMode            = HAL_OSPI_DQS_DISABLE;
+  s_command.SIOOMode           = HAL_OSPI_SIOO_INST_EVERY_CMD;
+  s_command.NbData             = 1;
+
+
+  if (HAL_OSPI_Command(p_hqspi, &s_command, HAL_OSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
+  {
+    return false;
+  }
 
   s_config.Match           = 0;
   s_config.Mask            = W25Q128FV_SR_WIP;
-  s_config.MatchMode       = QSPI_MATCH_MODE_AND;
-  s_config.StatusBytesSize = 1;
+  s_config.MatchMode       = HAL_OSPI_MATCH_MODE_AND;
   s_config.Interval        = 0x10;
-  s_config.AutomaticStop   = QSPI_AUTOMATIC_STOP_ENABLE;
+  s_config.AutomaticStop   = HAL_OSPI_AUTOMATIC_STOP_ENABLE;
 
-  if (HAL_QSPI_AutoPolling(hqspi, &s_command, &s_config, Timeout) != HAL_OK)
+  if (HAL_OSPI_AutoPolling(p_hqspi, &s_config, Timeout) != HAL_OK)
   {
     return QSPI_ERROR;
   }
@@ -852,31 +986,41 @@ static uint8_t QSPI_AutoPollingMemReady(QSPI_HandleTypeDef *hqspi, uint32_t Time
   return QSPI_OK;
 }
 
-static uint8_t QSPI_ReadStatus(QSPI_HandleTypeDef *hqspi, uint8_t cmd, uint8_t *p_data)
+static uint8_t QSPI_ReadStatus(OSPI_HandleTypeDef *p_hqspi, uint8_t cmd, uint8_t *p_data)
 {
-  QSPI_CommandTypeDef s_command;
+  OSPI_RegularCmdTypeDef s_command = {0};
   uint8_t reg;
 
   /* Initialize the read flag status register command */
-  s_command.InstructionMode   = QSPI_INSTRUCTION_1_LINE;
-  s_command.Instruction       = cmd;
-  s_command.AddressMode       = QSPI_ADDRESS_NONE;
-  s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
-  s_command.DataMode          = QSPI_DATA_1_LINE;
-  s_command.DummyCycles       = 0;
-  s_command.NbData            = 1;
-  s_command.DdrMode           = QSPI_DDR_MODE_DISABLE;
-  s_command.DdrHoldHalfCycle  = QSPI_DDR_HHC_ANALOG_DELAY;
-  s_command.SIOOMode          = QSPI_SIOO_INST_EVERY_CMD;
+  s_command.OperationType      = HAL_OSPI_OPTYPE_COMMON_CFG;
+  s_command.FlashId            = HAL_OSPI_FLASH_ID_1;
+  s_command.InstructionMode    = HAL_OSPI_INSTRUCTION_1_LINE;
+  s_command.InstructionDtrMode = HAL_OSPI_INSTRUCTION_DTR_DISABLE;
+  s_command.InstructionSize    = HAL_OSPI_INSTRUCTION_8_BITS;
+  s_command.Instruction        = cmd;
+  
+  s_command.AddressMode        = HAL_OSPI_ADDRESS_NONE;
+  s_command.AddressDtrMode     = HAL_OSPI_ADDRESS_DTR_DISABLE;
+  s_command.AddressSize        = HAL_OSPI_ADDRESS_24_BITS;
+  
+  s_command.AlternateBytesMode = HAL_OSPI_ALTERNATE_BYTES_NONE;
+  
+  s_command.DataMode           = HAL_OSPI_DATA_1_LINE;
+  s_command.DataDtrMode        = HAL_OSPI_DATA_DTR_DISABLE;
+  s_command.DummyCycles        = 0;
+  s_command.DQSMode            = HAL_OSPI_DQS_DISABLE;
+  s_command.SIOOMode           = HAL_OSPI_SIOO_INST_EVERY_CMD;
+  s_command.NbData             = 1;
+
 
   /* Configure the command */
-  if (HAL_QSPI_Command(hqspi, &s_command, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
+  if (HAL_OSPI_Command(p_hqspi, &s_command, HAL_OSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
   {
     return QSPI_ERROR;
   }
 
   /* Reception of the data */
-  if (HAL_QSPI_Receive(hqspi, &reg, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
+  if (HAL_OSPI_Receive(p_hqspi, &reg, HAL_OSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
   {
     return QSPI_ERROR;
   }
@@ -886,44 +1030,51 @@ static uint8_t QSPI_ReadStatus(QSPI_HandleTypeDef *hqspi, uint8_t cmd, uint8_t *
   return QSPI_OK;
 }
 
-static uint8_t QSPI_WriteStatus(QSPI_HandleTypeDef *hqspi, uint8_t cmd, uint8_t data)
+static uint8_t QSPI_WriteStatus(OSPI_HandleTypeDef *p_hqspi, uint8_t cmd, uint8_t data)
 {
-  QSPI_CommandTypeDef s_command;
+  OSPI_RegularCmdTypeDef s_command = {0};
 
   /* Initialize the program command */
-  s_command.InstructionMode   = QSPI_INSTRUCTION_1_LINE;
-  s_command.Instruction       = cmd;
-  s_command.AddressMode       = QSPI_ADDRESS_NONE;
-  s_command.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
-  s_command.DataMode          = QSPI_DATA_1_LINE;
-  s_command.DummyCycles       = 0;
-  s_command.NbData            = 1;
-  s_command.DdrMode           = QSPI_DDR_MODE_DISABLE;
-  s_command.DdrHoldHalfCycle  = QSPI_DDR_HHC_ANALOG_DELAY;
-  s_command.SIOOMode          = QSPI_SIOO_INST_EVERY_CMD;
-
-
+  s_command.OperationType      = HAL_OSPI_OPTYPE_COMMON_CFG;
+  s_command.FlashId            = HAL_OSPI_FLASH_ID_1;
+  s_command.InstructionMode    = HAL_OSPI_INSTRUCTION_1_LINE;
+  s_command.InstructionDtrMode = HAL_OSPI_INSTRUCTION_DTR_DISABLE;
+  s_command.InstructionSize    = HAL_OSPI_INSTRUCTION_8_BITS;
+  s_command.Instruction        = cmd;
+  
+  s_command.AddressMode        = HAL_OSPI_ADDRESS_NONE;
+  s_command.AddressDtrMode     = HAL_OSPI_ADDRESS_DTR_DISABLE;
+  s_command.AddressSize        = HAL_OSPI_ADDRESS_24_BITS;
+  
+  s_command.AlternateBytesMode = HAL_OSPI_ALTERNATE_BYTES_NONE;
+  
+  s_command.DataMode           = HAL_OSPI_DATA_1_LINE;
+  s_command.DataDtrMode        = HAL_OSPI_DATA_DTR_DISABLE;
+  s_command.DummyCycles        = 0;
+  s_command.DQSMode            = HAL_OSPI_DQS_DISABLE;
+  s_command.SIOOMode           = HAL_OSPI_SIOO_INST_EVERY_CMD;
+  s_command.NbData             = 1;
 
   /* Enable write operations */
-  if (QSPI_WriteEnable(hqspi) != QSPI_OK)
+  if (QSPI_WriteEnable(p_hqspi) != QSPI_OK)
   {
     return QSPI_ERROR;
   }
 
   /* Configure the command */
-  if (HAL_QSPI_Command(hqspi, &s_command, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
+  if (HAL_OSPI_Command(p_hqspi, &s_command, HAL_OSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
   {
     return QSPI_ERROR;
   }
 
   /* Transmission of the data */
-  if (HAL_QSPI_Transmit(hqspi, &data, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
+  if (HAL_OSPI_Transmit(p_hqspi, &data, HAL_OSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
   {
     return QSPI_ERROR;
   }
 
   /* Configure automatic polling mode to wait for end of program */
-  if (QSPI_AutoPollingMemReady(hqspi, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != QSPI_OK)
+  if (QSPI_AutoPollingMemReady(p_hqspi, HAL_OSPI_TIMEOUT_DEFAULT_VALUE) != QSPI_OK)
   {
     return QSPI_ERROR;
   }
