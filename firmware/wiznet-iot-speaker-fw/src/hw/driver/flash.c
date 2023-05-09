@@ -279,7 +279,8 @@ void cliFlash(cli_args_t *args)
   {
     cliPrintf("flash addr  : 0x%X\n", 0x8000000);
     cliPrintf("qspi  addr  : 0x%X\n", 0x90000000);
-    ret = false;
+    
+    ret = true;
   }
 
   if(args->argc == 3 && args->isStr(0, "read"))
@@ -302,6 +303,7 @@ void cliFlash(cli_args_t *args)
         cliPrintf( "addr : 0x%X\t Fail\n", addr+i);
       }
     }
+
     ret = true;
   }
     
@@ -345,6 +347,7 @@ void cliFlash(cli_args_t *args)
     {
       cliPrintf("FAIL\n");
     }
+
     ret = true;
   }
 
@@ -405,9 +408,9 @@ void cliFlash(cli_args_t *args)
       cliPrintf("OK\n");  
     } while (0);
     
-
     ret = true;
   }
+
 
   if (ret == false)
   {
@@ -417,6 +420,5 @@ void cliFlash(cli_args_t *args)
     cliPrintf( "flash write [addr] [data]\n");
     cliPrintf( "flash check [addr] [count]\n");
   }
-
 }
 #endif
