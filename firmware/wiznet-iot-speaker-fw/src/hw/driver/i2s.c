@@ -477,7 +477,7 @@ void cliI2s(cli_args_t *args)
 
     int16_t buf_frame[i2s_frame_len];
 
-    fseek(fp, sizeof(wavfile_header_t), SEEK_SET);
+    fseek(fp, sizeof(wavfile_header_t) + 1024, SEEK_SET);
 
     while(cliKeepLoop())
     {
