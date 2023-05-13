@@ -23,7 +23,8 @@ uint8_t  uartRead(uint8_t ch);
 uint32_t uartWrite(uint8_t ch, uint8_t *p_data, uint32_t length);
 uint32_t uartPrintf(uint8_t ch, const char *fmt, ...);
 uint32_t uartGetBaud(uint8_t ch);
-
+uint32_t uartGetRxCnt(uint8_t ch);
+uint32_t uartGetTxCnt(uint8_t ch);
 
 #ifdef __cplusplus
 }

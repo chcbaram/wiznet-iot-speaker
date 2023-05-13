@@ -17,6 +17,8 @@ bool hwInit(void)
   gpioInit();
   uartInit();
   logOpen(_DEF_UART1, 115200);
+  logOpen(_DEF_UART2, 115200);
+
 
   logPrintf("\r\n[ Firmware Begin... ]\r\n");
   logPrintf("Booting..Name \t\t: %s\r\n", _DEF_BOARD_NAME);
