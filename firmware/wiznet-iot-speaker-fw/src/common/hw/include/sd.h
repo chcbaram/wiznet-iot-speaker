@@ -48,6 +48,7 @@ bool sdIsDetected(void);
 bool sdGetInfo(sd_info_t *p_info);
 bool sdIsBusy(void);
 bool sdIsReady(uint32_t timeout);
+sd_state_t sdUpdate(void);
 sd_state_t sdGetState(void);
 const char *sdGetStateMsg(void);
 

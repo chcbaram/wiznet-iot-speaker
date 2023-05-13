@@ -34,6 +34,7 @@ bool hwInit(void)
   buzzerInit();
   w5300Init();
   dxlInit();
+  sdInit();
   
 
   return true;

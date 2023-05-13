@@ -20,6 +20,7 @@
 #include "qspi.h"
 #include "fs.h"
 #include "dxl.h"
+#include "sd.h"
 
 
 bool hwInit(void);

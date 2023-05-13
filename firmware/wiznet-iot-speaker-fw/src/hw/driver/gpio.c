@@ -18,6 +18,7 @@ typedef struct
 const gpio_tbl_t gpio_tbl[GPIO_MAX_CH] =
     {
         {GPIOE, GPIO_PIN_1,  _DEF_OUTPUT, GPIO_PIN_SET, GPIO_PIN_RESET,   _DEF_HIGH},      // 0. W5300_RST
+        {GPIOA, GPIO_PIN_6,  _DEF_INPUT,  GPIO_PIN_SET, GPIO_PIN_RESET,   _DEF_HIGH},      // 1. SD_CD
     };
 
 
@@ -32,6 +33,7 @@ bool gpioInit(void)
   bool ret = true;
 
 
+  __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOE_CLK_ENABLE();
 
 
