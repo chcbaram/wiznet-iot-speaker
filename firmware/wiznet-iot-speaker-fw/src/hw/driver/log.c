@@ -44,7 +44,7 @@ static bool is_enable = true;
 static bool is_open = false;
 
 static uint8_t  log_ch = LOG_CH;
-static uint32_t log_baud = 57600;
+static uint32_t log_baud = 115200;
 
 static char print_buf[256];
 
