@@ -17,6 +17,8 @@
 #define _USE_HW_FAULT
 #define _USE_HW_SD
 #define _USE_HW_FATFS
+#define _USE_HW_FILES
+#define _USE_HW_I2S
 
 
 #define _USE_HW_LED
@@ -46,7 +48,7 @@
 #define      HW_SWTIMER_MAX_CH      8
 
 #define _USE_HW_GPIO
-#define      HW_GPIO_MAX_CH         2
+#define      HW_GPIO_MAX_CH         3
 
 #define _USE_HW_W5300
 #define      HW_W5300_BASE_ADDR     0x60000000
@@ -63,7 +65,9 @@
 #define      HW_I2C_MAX_CH          1
 
 
+
 #define _PIN_GPIO_W5300_RST         0
 #define _PIN_GPIO_SDCARD_DETECT     1
+#define _PIN_GPIO_SPK_EN            2
 
 #endif

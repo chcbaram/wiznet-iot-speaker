@@ -19,6 +19,7 @@ const gpio_tbl_t gpio_tbl[GPIO_MAX_CH] =
     {
         {GPIOE, GPIO_PIN_1,  _DEF_OUTPUT, GPIO_PIN_SET, GPIO_PIN_RESET,   _DEF_HIGH},      // 0. W5300_RST
         {GPIOA, GPIO_PIN_6,  _DEF_INPUT,  GPIO_PIN_SET, GPIO_PIN_RESET,   _DEF_HIGH},      // 1. SD_CD
+        {GPIOD, GPIO_PIN_11, _DEF_OUTPUT, GPIO_PIN_SET, GPIO_PIN_RESET,   _DEF_LOW },      // 2. SPK_EN
     };
 
 

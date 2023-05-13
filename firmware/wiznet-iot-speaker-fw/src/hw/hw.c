@@ -33,6 +33,7 @@ bool hwInit(void)
   fsInit();
   fmcInit();
   buzzerInit();
+  i2sInit();
   w5300Init();
   dxlInit();
   sdInit();
