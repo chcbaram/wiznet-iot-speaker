@@ -18,6 +18,7 @@
 #include "flash.h"
 #include "fault.h"
 #include "qspi.h"
+#include "fs.h"
 
 
 bool hwInit(void);

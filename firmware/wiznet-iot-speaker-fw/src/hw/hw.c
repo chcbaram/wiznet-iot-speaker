@@ -27,6 +27,7 @@ bool hwInit(void)
   faultInit();
   qspiInit();
   flashInit();
+  fsInit();
   fmcInit();
   buzzerInit();
   w5300Init();

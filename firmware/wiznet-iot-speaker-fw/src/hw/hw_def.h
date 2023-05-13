@@ -46,6 +46,10 @@
 #define _USE_HW_W5300
 #define      HW_W5300_BASE_ADDR     0x60000000
 
+#define _USE_HW_FS
+#define      HW_FS_FLASH_OFFSET     0x90000000
+#define      HW_FS_MAX_SIZE         (8*1024*1024)
+
 
 #define _PIN_GPIO_W5300_RST         0
 

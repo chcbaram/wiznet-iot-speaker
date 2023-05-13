@@ -562,7 +562,7 @@ uint8_t BSP_QSPI_Erase_Block(uint32_t BlockAddress)
   s_command.AddressMode        = HAL_OSPI_ADDRESS_1_LINE;
   s_command.AddressDtrMode     = HAL_OSPI_ADDRESS_DTR_DISABLE;
   s_command.AddressSize        = HAL_OSPI_ADDRESS_24_BITS;
-  
+  s_command.Address            = BlockAddress;
   s_command.AlternateBytesMode = HAL_OSPI_ALTERNATE_BYTES_NONE;
   
   s_command.DataMode           = HAL_OSPI_DATA_NONE;
@@ -608,7 +608,8 @@ uint8_t BSP_QSPI_Erase_Sector(uint32_t SectorAddress)
   s_command.AddressMode        = HAL_OSPI_ADDRESS_1_LINE;
   s_command.AddressDtrMode     = HAL_OSPI_ADDRESS_DTR_DISABLE;
   s_command.AddressSize        = HAL_OSPI_ADDRESS_24_BITS;
-  
+  s_command.Address            = SectorAddress;
+
   s_command.AlternateBytesMode = HAL_OSPI_ALTERNATE_BYTES_NONE;
   
   s_command.DataMode           = HAL_OSPI_DATA_NONE;
