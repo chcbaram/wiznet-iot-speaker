@@ -18,6 +18,10 @@ file(GLOB SRC_FILES CONFIGURE_DEPENDS
   src/*.c
   src/bsp/*.c
   src/bsp/device/*.c
+
+  src/lib/FatFs/src/*.c
+  src/lib/FatFs/src/option/syscall.c
+  src/lib/FatFs/src/option/unicode.c
 )
 
 file(GLOB_RECURSE SRC_FILES_RECURSE CONFIGURE_DEPENDS
@@ -45,11 +49,13 @@ target_include_directories(${EXECUTABLE} PRIVATE
   src/common/core
   src/common/hw/include 
   src/hw
+  src/hw/driver/fatfs
   src/lib
 
   src/lib/CMSIS/Include
   src/lib/CMSIS/Device/ST/STM32H7xx/Include
   src/lib/STM32H7xx_HAL_Driver/Inc
+  src/lib/FatFs/src
 )
 
 target_compile_definitions(${EXECUTABLE} PRIVATE

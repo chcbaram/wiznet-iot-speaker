@@ -16,6 +16,7 @@
 #define _USE_HW_QSPI
 #define _USE_HW_FAULT
 #define _USE_HW_SD
+#define _USE_HW_FATFS
 
 
 #define _USE_HW_LED

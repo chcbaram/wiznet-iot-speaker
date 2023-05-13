@@ -21,6 +21,7 @@
 #include "fs.h"
 #include "dxl.h"
 #include "sd.h"
+#include "fatfs.h"
 
 
 bool hwInit(void);

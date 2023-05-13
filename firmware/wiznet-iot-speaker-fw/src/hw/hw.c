@@ -35,7 +35,7 @@ bool hwInit(void)
   w5300Init();
   dxlInit();
   sdInit();
-  
+  fatfsInit();
 
   return true;
 }

@@ -61,6 +61,7 @@ bool sdInit(void)
 
   is_init = ret;
 
+  logPrintf("[%s] sdInit()\n", ret ? "OK":"NG");
 
 #ifdef _USE_HW_CLI
   cliAdd("sd", cliSd);
