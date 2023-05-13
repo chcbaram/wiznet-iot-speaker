@@ -33,6 +33,8 @@ bool hwInit(void)
   fmcInit();
   buzzerInit();
   w5300Init();
+  dxlInit();
+  
 
   return true;
 }

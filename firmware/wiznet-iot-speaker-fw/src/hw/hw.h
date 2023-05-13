@@ -19,6 +19,7 @@
 #include "fault.h"
 #include "qspi.h"
 #include "fs.h"
+#include "dxl.h"
 
 
 bool hwInit(void);
