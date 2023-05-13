@@ -59,6 +59,9 @@
 #define      HW_DXL_PACKET_BUF_MAX  512
 #define      HW_DXL_DEVICE_CNT_MAX  16
 
+#define _USE_HW_I2C
+#define      HW_I2C_MAX_CH          1
+
 
 #define _PIN_GPIO_W5300_RST         0
 #define _PIN_GPIO_SDCARD_DETECT     1

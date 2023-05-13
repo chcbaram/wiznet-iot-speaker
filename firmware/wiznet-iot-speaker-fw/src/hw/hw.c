@@ -15,6 +15,7 @@ bool hwInit(void)
   ledInit();
   buttonInit();
   gpioInit();
+  i2cInit();
   uartInit();
   uartOpen(_DEF_UART1, 115200);
   uartOpen(_DEF_UART2, 115200);
