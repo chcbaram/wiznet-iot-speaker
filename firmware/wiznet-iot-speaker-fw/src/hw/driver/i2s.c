@@ -23,6 +23,9 @@
 #define I2S_BUF_FRAME_LEN       ((48000 * 2 * I2S_BUF_MS) / 1000)  // 48Khz, Stereo, 4ms
 
 
+#ifdef _USE_HW_CLI
+static void cliI2s(cli_args_t *args);
+#endif
 
 static bool is_init = false;
 static bool is_started = false;
@@ -41,10 +44,6 @@ static int16_t   q_buf[I2S_BUF_LEN];
 static I2S_HandleTypeDef hi2s1;
 static DMA_HandleTypeDef hdma_spi1_tx;
 
-
-#ifdef _USE_HW_CLI
-static void cliI2s(cli_args_t *args);
-#endif
 
 
 
@@ -81,6 +80,8 @@ bool i2sInit(void)
   gpioPinWrite(_PIN_GPIO_SPK_EN, _DEF_HIGH);
 
   is_init = ret;
+
+  logPrintf("[%s] i2sInit()\n", ret ? "OK" : "NG");
 
 #ifdef _USE_HW_CLI
   cliAdd("i2s", cliI2s);
@@ -141,6 +142,11 @@ bool i2sStop(void)
 {
   is_started = false;
   return true;
+}
+
+int8_t i2sGetEmptyChannel(void)
+{
+  return 0;
 }
 
 uint32_t i2sAvailableForWrite(uint8_t ch)
@@ -205,7 +211,7 @@ bool i2sPlayBeep(uint32_t freq_hz, uint16_t volume, uint32_t time_ms)
   volume = constrain(volume, 0, 100);
   volume_out = (INT16_MAX/40) * volume / 100;
 
-  mix_ch = 0;
+  mix_ch =  i2sGetEmptyChannel();
 
   div_freq = (float)sample_rate/(float)freq_hz;
 
@@ -444,6 +450,7 @@ void cliI2s(cli_args_t *args)
     wavfile_header_t header;
     uint32_t r_len;
     int32_t  volume = 100;
+    int8_t ch;
 
 
     file_name = args->getStr(1);
@@ -479,12 +486,14 @@ void cliI2s(cli_args_t *args)
 
     fseek(fp, sizeof(wavfile_header_t) + 1024, SEEK_SET);
 
+    ch = i2sGetEmptyChannel();
+
     while(cliKeepLoop())
     {
       int len;
 
 
-      if (i2sAvailableForWrite(0) >= i2s_frame_len)
+      if (i2sAvailableForWrite(ch) >= i2s_frame_len)
       {
         len = fread(buf_frame, r_len, 2*header.NumChannels, fp);
 
@@ -508,7 +517,7 @@ void cliI2s(cli_args_t *args)
             buf_data[1] = buf_frame[i] * volume / 100;;
           }
 
-          i2sWrite(0, (int16_t *)buf_data, 2);
+          i2sWrite(ch, (int16_t *)buf_data, 2);
         }
       }
     }
