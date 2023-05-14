@@ -236,7 +236,6 @@ bool i2sPlayBeep(uint32_t freq_hz, uint16_t volume, uint32_t time_ms)
 }
 
 
-volatile uint32_t i2s_cnt = 0;
 void HAL_I2S_TxCpltCallback(I2S_HandleTypeDef *hi2s)
 {
   if (is_started != true)
