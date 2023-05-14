@@ -50,7 +50,7 @@
 #define      HW_SWTIMER_MAX_CH      8
 
 #define _USE_HW_GPIO
-#define      HW_GPIO_MAX_CH         3
+#define      HW_GPIO_MAX_CH         7
 
 #define _USE_HW_W5300
 #define      HW_W5300_BASE_ADDR     0x60000000
