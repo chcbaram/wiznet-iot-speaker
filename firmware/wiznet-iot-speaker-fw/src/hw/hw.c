@@ -34,6 +34,8 @@ bool hwInit(void)
   fmcInit();
   buzzerInit();
   i2sInit();
+  saiInit();
+  es8156Init();
   w5300Init();
   dxlInit();
   sdInit();

@@ -442,7 +442,7 @@ void cliI2s(cli_args_t *args)
     ret = true;
   }
 
-  if (args->argc == 2 && args->isStr(0, "play_wav") == true)
+  if (args->argc == 2 && args->isStr(0, "play-wav") == true)
   {
     char *file_name;
     FILE *fp;
@@ -531,7 +531,7 @@ void cliI2s(cli_args_t *args)
     cliPrintf("i2s info\n");
     cliPrintf("i2s melody\n");
     cliPrintf("i2s beep freq time_ms\n");
-    cliPrintf("i2s play_wav filename\n");
+    cliPrintf("i2s play-wav filename\n");
   }
 }
 #endif

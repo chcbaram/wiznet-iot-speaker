@@ -24,6 +24,8 @@
 #include "fatfs.h"
 #include "i2c.h"
 #include "i2s.h"
+#include "sai.h"
+#include "es8156.h"
 
 
 bool hwInit(void);

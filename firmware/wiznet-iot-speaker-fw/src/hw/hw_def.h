@@ -19,6 +19,8 @@
 #define _USE_HW_FATFS
 #define _USE_HW_FILES
 #define _USE_HW_I2S
+#define _USE_HW_SAI
+#define _USE_HW_ES8156
 
 
 #define _USE_HW_LED
