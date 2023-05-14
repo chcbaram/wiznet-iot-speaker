@@ -44,7 +44,7 @@
 #define      HW_LOG_LIST_BUF_MAX    1024
 
 #define _USE_HW_BUTTON
-#define      HW_BUTTON_MAX_CH       3
+#define      HW_BUTTON_MAX_CH       5
 
 #define _USE_HW_SWTIMER
 #define      HW_SWTIMER_MAX_CH      8

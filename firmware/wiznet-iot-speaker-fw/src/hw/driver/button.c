@@ -18,6 +18,8 @@ button_tbl_t button_tbl[BUTTON_MAX_CH] =
         {GPIOG, GPIO_PIN_4, GPIO_PIN_RESET},
         {GPIOG, GPIO_PIN_3, GPIO_PIN_RESET},
         {GPIOG, GPIO_PIN_2, GPIO_PIN_RESET},
+        {GPIOG, GPIO_PIN_0, GPIO_PIN_RESET},  // I/O Encoder Left 
+        {GPIOG, GPIO_PIN_1, GPIO_PIN_RESET},  // I/O Encoder Right
     };
 
 
