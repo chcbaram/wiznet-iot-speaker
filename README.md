@@ -30,3 +30,7 @@ MCU | STM32H723ZGT6 | FLASH : 1MB, SRAM : 564KB | 외부 SRAM 버스 16비트
 ### 메인보드
 
 ![main_bd](https://user-images.githubusercontent.com/5537436/235310032-73d421e0-8c94-4bc9-b89e-5fef2ce7070f.jpg)
+
+### 제작보드
+
+![Monosnap Monosnap 2023-05-14 21-57-32](https://github.com/chcbaram/wiznet-iot-speaker/assets/5537436/5b104284-f17a-4f77-9830-f25a502e559b)
