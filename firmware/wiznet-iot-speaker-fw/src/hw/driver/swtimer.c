@@ -93,8 +93,10 @@ void swtimerISR(void)
 
 }
 
-void swtimerSet(uint8_t TmrNum, uint32_t TmrData, uint8_t TmrMode, void (*Fnct)(void *),void *arg)
+void swtimerSet(swtimer_handle_t TmrNum, uint32_t TmrData, uint8_t TmrMode, void (*Fnct)(void *),void *arg)
 {
+  if(TmrNum < 0) return;
+
   swtimer_tbl[TmrNum].Timer_Mode = TmrMode;    // 모드설정
   swtimer_tbl[TmrNum].TmrFnct    = Fnct;       // 실행할 함수
   swtimer_tbl[TmrNum].TmrFnctArg = arg;        // 매개변수
@@ -102,25 +104,25 @@ void swtimerSet(uint8_t TmrNum, uint32_t TmrData, uint8_t TmrMode, void (*Fnct)(
   swtimer_tbl[TmrNum].Timer_Init = TmrData;
 }
 
-void swtimerStart(uint8_t TmrNum)
+void swtimerStart(swtimer_handle_t TmrNum)
 {
-  if(TmrNum < _HW_DEF_SW_TIMER_MAX)
-  {
-    swtimer_tbl[TmrNum].Timer_Ctn = swtimer_tbl[TmrNum].Timer_Init;
-    swtimer_tbl[TmrNum].Timer_En  = ON;
-  }
+  if(TmrNum < 0) return;
+
+  swtimer_tbl[TmrNum].Timer_Ctn = swtimer_tbl[TmrNum].Timer_Init;
+  swtimer_tbl[TmrNum].Timer_En  = ON;
 }
 
-void swtimerStop (uint8_t TmrNum)
+void swtimerStop (swtimer_handle_t TmrNum)
 {
-  if(TmrNum < _HW_DEF_SW_TIMER_MAX)
-  {
-    swtimer_tbl[TmrNum].Timer_En = OFF;
-  }
+  if(TmrNum < 0) return;
+
+  swtimer_tbl[TmrNum].Timer_En = OFF;
 }
 
-void swtimerReset(uint8_t TmrNum)
+void swtimerReset(swtimer_handle_t TmrNum)
 {
+  if(TmrNum < 0) return;
+
   swtimer_tbl[TmrNum].Timer_En   = OFF;
   swtimer_tbl[TmrNum].Timer_Ctn  = swtimer_tbl[TmrNum].Timer_Init;
 }
@@ -129,7 +131,10 @@ swtimer_handle_t swtimerGetHandle(void)
 {
   swtimer_handle_t TmrIndex = sw_timer_handle_index;
 
-  sw_timer_handle_index++;
+  if (TmrIndex < _HW_DEF_SW_TIMER_MAX)
+    sw_timer_handle_index++;
+  else
+    TmrIndex = -1;
 
   return TmrIndex;
 }

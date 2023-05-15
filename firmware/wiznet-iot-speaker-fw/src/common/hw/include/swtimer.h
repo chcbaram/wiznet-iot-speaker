@@ -37,14 +37,14 @@ typedef int16_t             swtimer_handle_t;
 
 
 bool swtimerInit(void);
-void swtimerSet  (uint8_t TmrNum, uint32_t TmrData, uint8_t TmrMode, void (*Fnct)(void *),void *arg);
-void swtimerStart(uint8_t TmrNum);
-void swtimerStop (uint8_t TmrNum);
-void swtimerReset(uint8_t TmrNum);
+void swtimerSet  (swtimer_handle_t TmrNum, uint32_t TmrData, uint8_t TmrMode, void (*Fnct)(void *),void *arg);
+void swtimerStart(swtimer_handle_t TmrNum);
+void swtimerStop (swtimer_handle_t TmrNum);
+void swtimerReset(swtimer_handle_t TmrNum);
 void swtimerISR(void);
 
 
-int16_t  swtimerGetHandle(void);
+swtimer_handle_t swtimerGetHandle(void);
 uint32_t swtimerGetCounter(void);
 
 #endif

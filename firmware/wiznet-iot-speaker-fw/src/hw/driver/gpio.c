@@ -24,6 +24,7 @@ const gpio_tbl_t gpio_tbl[GPIO_MAX_CH] =
         {GPIOC, GPIO_PIN_5,  _DEF_INPUT,  GPIO_PIN_SET, GPIO_PIN_RESET,   _DEF_HIGH},      // 4. L_ENC_B
         {GPIOB, GPIO_PIN_1,  _DEF_INPUT,  GPIO_PIN_SET, GPIO_PIN_RESET,   _DEF_HIGH},      // 5. R_ENC_A
         {GPIOB, GPIO_PIN_2,  _DEF_INPUT,  GPIO_PIN_SET, GPIO_PIN_RESET,   _DEF_HIGH},      // 6. R_ENC_B
+        {GPIOA, GPIO_PIN_8,  _DEF_OUTPUT, GPIO_PIN_SET, GPIO_PIN_RESET,   _DEF_LOW },      // 7. LCD_BLK
     };
 
 

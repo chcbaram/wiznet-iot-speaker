@@ -40,6 +40,7 @@ bool hwInit(void)
   dxlInit();
   sdInit();
   fatfsInit();
+  encoderInit();
 
   return true;
 }

@@ -26,6 +26,7 @@
 #include "i2s.h"
 #include "sai.h"
 #include "es8156.h"
+#include "encoder.h"
 
 
 bool hwInit(void);
