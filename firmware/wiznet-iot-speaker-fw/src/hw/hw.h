@@ -25,9 +25,10 @@
 #include "i2c.h"
 #include "i2s.h"
 #include "sai.h"
+#include "spi.h"
 #include "es8156.h"
 #include "encoder.h"
-
+#include "lcd.h"
 
 bool hwInit(void);
 

@@ -16,6 +16,7 @@ bool hwInit(void)
   buttonInit();
   gpioInit();
   i2cInit();
+  spiInit();
   uartInit();
   uartOpen(_DEF_UART1, 115200);
   uartOpen(_DEF_UART2, 115200);
@@ -41,6 +42,7 @@ bool hwInit(void)
   sdInit();
   fatfsInit();
   encoderInit();
+  lcdInit();
 
   return true;
 }

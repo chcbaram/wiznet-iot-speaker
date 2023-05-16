@@ -25,6 +25,8 @@ const gpio_tbl_t gpio_tbl[GPIO_MAX_CH] =
         {GPIOB, GPIO_PIN_1,  _DEF_INPUT,  GPIO_PIN_SET, GPIO_PIN_RESET,   _DEF_HIGH},      // 5. R_ENC_A
         {GPIOB, GPIO_PIN_2,  _DEF_INPUT,  GPIO_PIN_SET, GPIO_PIN_RESET,   _DEF_HIGH},      // 6. R_ENC_B
         {GPIOA, GPIO_PIN_8,  _DEF_OUTPUT, GPIO_PIN_SET, GPIO_PIN_RESET,   _DEF_LOW },      // 7. LCD_BLK
+        {GPIOF, GPIO_PIN_11, _DEF_OUTPUT, GPIO_PIN_SET, GPIO_PIN_RESET,   _DEF_HIGH},      // 8. LCD_RST
+        {GPIOB, GPIO_PIN_0,  _DEF_OUTPUT, GPIO_PIN_SET, GPIO_PIN_RESET,   _DEF_HIGH},      // 9. LCD_DC
     };
 
 
@@ -40,7 +42,9 @@ bool gpioInit(void)
 
 
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOE_CLK_ENABLE();
+  __HAL_RCC_GPIOF_CLK_ENABLE();
 
 
   for (int i=0; i<GPIO_MAX_CH; i++)

@@ -50,7 +50,7 @@
 #define      HW_SWTIMER_MAX_CH      8
 
 #define _USE_HW_GPIO
-#define      HW_GPIO_MAX_CH         8
+#define      HW_GPIO_MAX_CH         10
 
 #define _USE_HW_W5300
 #define      HW_W5300_BASE_ADDR     0x60000000
@@ -69,9 +69,23 @@
 #define _USE_HW_ENCODER
 #define      HW_ENCODER_MAX_CH      2
 
+#define _USE_HW_SPI
+#define      HW_SPI_MAX_CH          1
+
+#define _USE_HW_LCD
+#define      HW_LCD_SWAP_RGB        0
+#define      HW_LCD_LVGL            0
+#define      HW_LCD_LOGO            0
+#define _USE_HW_ST7789
+#define      HW_LCD_WIDTH           240
+#define      HW_LCD_HEIGHT          240
+
 
 #define _PIN_GPIO_W5300_RST         0
 #define _PIN_GPIO_SDCARD_DETECT     1
 #define _PIN_GPIO_SPK_EN            2
+#define _PIN_GPIO_LCD_BLK           7
+#define _PIN_GPIO_LCD_RST           8
+#define _PIN_GPIO_LCD_DC            9
 
 #endif
