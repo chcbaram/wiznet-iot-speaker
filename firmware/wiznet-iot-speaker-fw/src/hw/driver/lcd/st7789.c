@@ -288,13 +288,6 @@ bool st7789SendBuffer(uint8_t *p_data, uint32_t length, uint32_t timeout_ms)
 
   gpioPinWrite(_PIN_DEF_DC, _DEF_HIGH);
   spiDmaTxTransfer(_DEF_SPI1, (void *)p_data, length, 0);
-  // for (int i=0; i<LCD_HEIGHT; i++)
-  // {
-  //   if (spiDmaTxTransfer(_DEF_SPI1, (void *)&p_data[i * LCD_WIDTH * 2], LCD_WIDTH, 10) != true)
-  //   {
-  //     break;
-  //   }
-  // }
 
   return true;
 }
