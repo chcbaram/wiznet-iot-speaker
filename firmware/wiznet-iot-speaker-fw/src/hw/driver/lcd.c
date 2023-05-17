@@ -1358,6 +1358,7 @@ void cliLcd(cli_args_t *args)
   if (args->argc == 1 && args->isStr(0, "test") == true)
   {
     uint8_t cnt = 0;
+    uint16_t x = 0;
 
     lcdSetFont(LCD_FONT_HAN);
 
@@ -1371,7 +1372,7 @@ void cliLcd(cli_args_t *args)
         pre_time = millis();
         lcdClearBuffer(black);
 
-        lcdPrintf(25,16*0, green, "[LCD 테스트]");
+        lcdPrintf(16*4,16*0, green, "[LCD 테스트]");
 
         lcdPrintf(0,16*1, white, "%d fps", lcdGetFps());
         lcdPrintf(0,16*2, white, "%d ms" , lcdGetFpsTime());
@@ -1383,8 +1384,15 @@ void cliLcd(cli_args_t *args)
         lcdDrawFillRect( 0, 70, 10, 10, red);
         lcdDrawFillRect(10, 70, 10, 10, green);
         lcdDrawFillRect(20, 70, 10, 10, blue);
+      
 
-        lcdDrawFillRect(0, 120, 240, 120, green);
+        lcdDrawFillRect(x, 90, 30*2, 30*2, red);
+        lcdDrawFillRect(lcdGetWidth()-x, 90+30*2, 30*2, 30*2, green);
+        lcdDrawFillRect(x + 30, 90+30*4, 30*2, 30*2, blue);
+
+        x += 3;
+        x %= lcdGetWidth();
+
         exe_time = millis()-pre_time;
         lcdPrintf(0, 120, red, "draw %d ms", exe_time);
 
