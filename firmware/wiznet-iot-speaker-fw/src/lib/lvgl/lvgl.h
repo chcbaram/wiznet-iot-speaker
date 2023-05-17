@@ -28,7 +28,7 @@
 #error "Invalid LV_COLOR_DEPTH in lv_conf.h! Set it to 1, 8, 16 or 32!"
 #endif
 
-#define lv_img_dsc_t lcd_img_t
+#define lv_img_dsc_t lvgl_img_t
 
 
 /*Image color format*/

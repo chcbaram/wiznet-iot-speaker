@@ -123,6 +123,7 @@ bool lcdInit(void)
   is_init = st7789Init();
   st7789InitDriver(&lcd);
 
+  delay(50);
   lcdLoadCfg();
   lcdSetBackLight(backlight_value);
 
@@ -1303,13 +1304,16 @@ void lcdLogoOn(void)
   x = (lcdGetWidth() - logo.w) / 2;
   y = (lcdGetHeight() - logo.h) / 2;
 
-  lcdClearBuffer(black);
-  lcdDrawImage(&logo, x, y - 16);
+  for (int i=0; i<32; i++)
+  {
+    lcdClearBuffer(black);
+    lcdDrawImage(&logo, x, y - 16 + ((32-i)*3));
 
-  lcdDrawRect(0, 0, LCD_WIDTH-0, LCD_HEIGHT-0, white);
-  lcdDrawRect(1, 1, LCD_WIDTH-2, LCD_HEIGHT-2, white);
+    // lcdDrawRect(0, 0, LCD_WIDTH-0, LCD_HEIGHT-0, white);
+    // lcdDrawRect(1, 1, LCD_WIDTH-2, LCD_HEIGHT-2, white);
 
-  lcdUpdateDraw();
+    lcdUpdateDraw();
+  }
 
   is_logo_on = true;
 }

@@ -12,6 +12,18 @@
 
 #ifdef _USE_HW_SPI
 
+#define SPI_TX_DMA_MAX_LENGTH   0xFFFF
+
+
+typedef struct
+{
+  bool tx_done;
+  uint8_t *p_tx_buf;
+  uint8_t *p_tx_buf_next;
+  uint32_t tx_length_next;
+} spi_dma_buf_t;
+
+
 typedef struct
 {
   bool is_open;
@@ -23,6 +35,8 @@ typedef struct
   SPI_HandleTypeDef *h_spi;
   DMA_HandleTypeDef *h_dma_tx;
   DMA_HandleTypeDef *h_dma_rx;
+
+  spi_dma_buf_t      dma_tx_buf;
 } spi_t;
 
 
@@ -48,6 +62,11 @@ bool spiInit(void)
     spi_tbl[i].func_tx = NULL;
     spi_tbl[i].h_dma_rx = NULL;
     spi_tbl[i].h_dma_tx = NULL;
+
+    spi_tbl[i].dma_tx_buf.p_tx_buf = NULL;
+    spi_tbl[i].dma_tx_buf.p_tx_buf_next = NULL;
+    spi_tbl[i].dma_tx_buf.tx_done = false;
+    spi_tbl[i].dma_tx_buf.tx_length_next = 0;    
   }
 
   return ret;
@@ -82,8 +101,8 @@ bool spiBegin(uint8_t ch)
       p_spi->h_spi->Init.FifoThreshold              = SPI_FIFO_THRESHOLD_01DATA;
       p_spi->h_spi->Init.TxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
       p_spi->h_spi->Init.RxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
-      p_spi->h_spi->Init.MasterSSIdleness           = SPI_MASTER_SS_IDLENESS_15CYCLE;
-      p_spi->h_spi->Init.MasterInterDataIdleness    = SPI_MASTER_INTERDATA_IDLENESS_00CYCLE;
+      p_spi->h_spi->Init.MasterSSIdleness           = SPI_MASTER_SS_IDLENESS_01CYCLE;
+      p_spi->h_spi->Init.MasterInterDataIdleness    = SPI_MASTER_INTERDATA_IDLENESS_01CYCLE;
       p_spi->h_spi->Init.MasterReceiverAutoSusp     = SPI_MASTER_RX_AUTOSUSP_DISABLE;
       p_spi->h_spi->Init.MasterKeepIOState          = SPI_MASTER_KEEP_IO_STATE_DISABLE;
       p_spi->h_spi->Init.IOSwap                     = SPI_IO_SWAP_DISABLE;
@@ -301,6 +320,8 @@ void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
 {
   spi_t  *p_spi;
+  volatile uint32_t length;
+
 
   if (hspi->Instance == spi_tbl[_DEF_SPI1].h_spi->Instance)
   {
@@ -308,27 +329,32 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
 
     p_spi->is_tx_done = true;
 
-    if (p_spi->func_tx != NULL)
+    if(p_spi->dma_tx_buf.tx_length_next > 0)  
     {
-      (*p_spi->func_tx)();
+      p_spi->dma_tx_buf.p_tx_buf = p_spi->dma_tx_buf.p_tx_buf_next;
+
+      if(p_spi->dma_tx_buf.tx_length_next > SPI_TX_DMA_MAX_LENGTH)
+      {
+        length = SPI_TX_DMA_MAX_LENGTH;
+        p_spi->dma_tx_buf.tx_length_next = p_spi->dma_tx_buf.tx_length_next - SPI_TX_DMA_MAX_LENGTH;
+        p_spi->dma_tx_buf.p_tx_buf_next = &p_spi->dma_tx_buf.p_tx_buf[SPI_TX_DMA_MAX_LENGTH];
+      }
+      else
+      {
+        length = p_spi->dma_tx_buf.tx_length_next;
+        p_spi->dma_tx_buf.tx_length_next = 0;
+        p_spi->dma_tx_buf.p_tx_buf_next = NULL;
+      }
+      HAL_SPI_Transmit_DMA(hspi, p_spi->dma_tx_buf.p_tx_buf, length);
     }
-  }
-}
-
-void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
-{
-  spi_t  *p_spi;
-
-
-  if (hspi->Instance == spi_tbl[_DEF_SPI1].h_spi->Instance)
-  {
-    p_spi = &spi_tbl[_DEF_SPI1];
-
-    p_spi->is_tx_done = true;
-
-    if (p_spi->func_tx != NULL)
+    else
     {
-      (*p_spi->func_tx)();
+      p_spi->dma_tx_buf.tx_done = true;
+
+      if (p_spi->func_tx != NULL)
+      {
+        (*p_spi->func_tx)();
+      }
     }
   }
 }

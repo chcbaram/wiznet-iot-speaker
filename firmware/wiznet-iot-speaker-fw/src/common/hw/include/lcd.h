@@ -16,7 +16,7 @@ extern "C" {
 
 #ifdef _USE_HW_LCD
 
-#ifdef HW_LCD_LVGL
+#if HW_LCD_LVGL == 1
 #include "lvgl/lvgl.h"
 #endif
 
@@ -105,6 +105,7 @@ typedef struct lcd_driver_t_
   bool     (*init)(void);
   bool     (*reset)(void);
   void     (*setWindow)(int32_t x, int32_t y, int32_t w, int32_t h);
+  void     (*setRotation)(uint8_t mode);
   uint16_t (*getWidth)(void);
   uint16_t (*getHeight)(void);
   bool     (*setCallBack)(void (*p_func)(void));

@@ -92,6 +92,7 @@ bool st7789InitDriver(lcd_driver_t *p_driver)
   p_driver->init = st7789Init;
   p_driver->reset = st7789Reset;
   p_driver->setWindow = st7789SetWindow;
+  p_driver->setRotation = st7789SetRotation;
   p_driver->getWidth = st7789GetWidth;
   p_driver->getHeight = st7789GetHeight;
   p_driver->setCallBack = st7789SetCallBack;
@@ -107,20 +108,17 @@ bool st7789Reset(void)
   spiAttachTxInterrupt(spi_ch, transferDoneISR);
 
     
-  gpioPinWrite(_PIN_DEF_BLK, _DEF_HIGH);
+  gpioPinWrite(_PIN_DEF_BLK, _DEF_LOW);
   gpioPinWrite(_PIN_DEF_DC,  _DEF_HIGH);
   gpioPinWrite(_PIN_DEF_RST, _DEF_LOW);
   delay(10);
   gpioPinWrite(_PIN_DEF_RST, _DEF_HIGH);
-  delay(120);
+  delay(50);
 
   st7789InitRegs();
 
-  st7789SetRotation(4);
-  st7789FillRect(0, 0, HW_LCD_WIDTH, HW_LCD_HEIGHT, red);
-  delay(1000);
-  st7789FillRect(0, 0, HW_LCD_WIDTH, HW_LCD_HEIGHT, blue);
-  // if (_PIN_DEF_BLK >= 0) gpioPinWrite(_PIN_DEF_BLK, _DEF_LOW);
+  st7789SetRotation(4); // 4, 3
+  st7789FillRect(0, 0, HW_LCD_WIDTH, HW_LCD_HEIGHT, black);
   
   return true;
 }
@@ -280,19 +278,23 @@ void st7789FillRect(int32_t x, int32_t y, int32_t w, int32_t h, uint32_t color)
 
 bool st7789SendBuffer(uint8_t *p_data, uint32_t length, uint32_t timeout_ms)
 {
+
+  if (is_write_frame == true) 
+    return false;
+
   is_write_frame = true;
 
   spiSetBitWidth(spi_ch, 16);
 
   gpioPinWrite(_PIN_DEF_DC, _DEF_HIGH);
-  // spiDmaTxTransfer(_DEF_SPI1, (void *)p_data, length, 0);
-  for (int i=0; i<LCD_HEIGHT; i++)
-  {
-    if (spiDmaTxTransfer(_DEF_SPI1, (void *)&p_data[i * LCD_WIDTH * 2], LCD_WIDTH, 10) != true)
-    {
-      break;
-    }
-  }
+  spiDmaTxTransfer(_DEF_SPI1, (void *)p_data, length, 0);
+  // for (int i=0; i<LCD_HEIGHT; i++)
+  // {
+  //   if (spiDmaTxTransfer(_DEF_SPI1, (void *)&p_data[i * LCD_WIDTH * 2], LCD_WIDTH, 10) != true)
+  //   {
+  //     break;
+  //   }
+  // }
 
   return true;
 }
