@@ -575,6 +575,10 @@ int32_t lcdGetHeight(void)
   return LCD_HEIGHT;
 }
 
+void lcdSetRotation(uint8_t mode)
+{
+  lcd.setRotation(mode);
+}
 
 void lcdDrawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color)
 {

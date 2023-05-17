@@ -151,6 +151,7 @@ void lcdSetWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
 void lcdSendBuffer(uint8_t *p_data, uint32_t length, uint32_t timeout_ms);
 void lcdDisplayOff(void);
 void lcdDisplayOn(void);
+void lcdSetRotation(uint8_t mode);
 
 void     lcdSetFps(int32_t fps);
 uint32_t lcdGetFps(void);

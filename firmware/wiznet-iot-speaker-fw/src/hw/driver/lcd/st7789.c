@@ -185,6 +185,8 @@ void st7789InitRegs(void)
 
 void st7789SetRotation(uint8_t mode)
 {
+  spiSetBitWidth(spi_ch, 8);
+  
   writecommand(ST7789_MADCTL);
 
   switch (mode)
