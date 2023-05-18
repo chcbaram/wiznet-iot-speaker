@@ -41,7 +41,7 @@
 
 #define LCD_OPT_DEF   __attribute__((optimize("O2")))
 #define _PIN_DEF_BL_CTL       _PIN_GPIO_LCD_BLK
-#define LCD_CFG_NAME "cfg_lcd"
+#define LCD_CFG_NAME "cfg.lcd"
 
 typedef struct
 {
