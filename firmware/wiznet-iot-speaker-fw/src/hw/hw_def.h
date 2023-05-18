@@ -21,6 +21,7 @@
 #define _USE_HW_I2S
 #define _USE_HW_SAI
 #define _USE_HW_ES8156
+#define _USE_HW_NVS
 
 
 #define _USE_HW_LED
@@ -71,6 +72,9 @@
 
 #define _USE_HW_SPI
 #define      HW_SPI_MAX_CH          1
+
+#define _USE_HW_PWM
+#define      HW_PWM_MAX_CH          1
 
 #define _USE_HW_LCD
 #define      HW_LCD_SWAP_RGB        0

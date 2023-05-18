@@ -16,6 +16,7 @@
 #include "hangul/han.h"
 #include "lcd/lcd_fonts.h"
 #include "lcd/st7789.h"
+#include "nvs.h"
 
 #ifdef _USE_HW_PWM
 #include "pwm.h"
@@ -40,7 +41,7 @@
 
 #define LCD_OPT_DEF   __attribute__((optimize("O2")))
 #define _PIN_DEF_BL_CTL       _PIN_GPIO_LCD_BLK
-
+#define LCD_CFG_NAME "cfg_lcd"
 
 typedef struct
 {
@@ -48,6 +49,11 @@ typedef struct
   int16_t y;
 } lcd_pixel_t;
 
+typedef struct
+{
+  uint8_t backlight_value;
+  uint8_t rotation_mode;
+} lcd_cfg_t;
 
 static lcd_driver_t lcd;
 
@@ -55,6 +61,7 @@ static lcd_driver_t lcd;
 static bool is_init = false;
 static volatile bool is_tx_done = true;
 static uint8_t backlight_value = 100;
+static uint8_t rotation_mode = 4;
 static uint8_t frame_index = 0;
 static LcdFont lcd_font = LCD_FONT_HAN;
 
@@ -81,6 +88,7 @@ static uint16_t __attribute__((aligned(64))) font_src_buffer[16 * 16];
 static uint16_t __attribute__((aligned(64))) font_dst_buffer[LCD_FONT_RESIZE_WIDTH * LCD_FONT_RESIZE_WIDTH];
 
 static lcd_font_t *font_tbl[LCD_FONT_MAX] = { &font_07x10, &font_11x18, &font_16x26, &font_hangul};
+static lcd_cfg_t lcd_cfg;
 
 #if HW_LCD_LOGO == 1
 LVGL_IMG_DEF(logo_img);
@@ -126,6 +134,7 @@ bool lcdInit(void)
   delay(50);
   lcdLoadCfg();
   lcdSetBackLight(backlight_value);
+  lcdSetRotation(rotation_mode);
 
   lcd.setCallBack(transferDoneISR);
 
@@ -157,38 +166,28 @@ bool lcdInit(void)
 bool lcdLoadCfg(void)
 {
   bool ret = true;
-  // esp_err_t err;
-  // nvs_handle_t nvs_h;
 
-  // err = nvs_open("storage", NVS_READWRITE, &nvs_h);
-  // if (err == ESP_OK)
-  // {
-  //   uint8_t pwm_value = backlight_value;
-
-  //   if (nvs_get_u8(nvs_h, "lcd_cfg_pwm", &pwm_value) == ESP_ERR_NVS_NOT_FOUND)
-  //   {
-  //     pwm_value = backlight_value;
-  //   }
-  //   backlight_value = pwm_value;
-  //   nvs_close(nvs_h);
-  // }
-
+  if (nvsGet(LCD_CFG_NAME, &lcd_cfg, sizeof(lcd_cfg)) == true)
+  {
+    backlight_value = lcd_cfg.backlight_value;
+    rotation_mode = lcd_cfg.rotation_mode;
+  }
+  else
+  {
+    lcd_cfg.backlight_value = backlight_value;
+    lcd_cfg.rotation_mode = rotation_mode;
+    ret = nvsSet(LCD_CFG_NAME, &lcd_cfg, sizeof(lcd_cfg));
+  }
   return ret;
 }
 
 bool lcdSaveCfg(void)
 {
   bool ret = true;
-  // esp_err_t err;
-  // nvs_handle_t nvs_h;
 
-  // err = nvs_open("storage", NVS_READWRITE, &nvs_h);
-  // if (err == ESP_OK)
-  // {
-  //   nvs_set_u8(nvs_h, "lcd_cfg_pwm", backlight_value);
-  //   nvs_commit(nvs_h);
-  //   nvs_close(nvs_h);
-  // }
+  lcd_cfg.backlight_value = backlight_value;
+  lcd_cfg.rotation_mode = rotation_mode;
+  ret = nvsSet(LCD_CFG_NAME, &lcd_cfg, sizeof(lcd_cfg));
 
   return ret;
 }
@@ -578,6 +577,8 @@ int32_t lcdGetHeight(void)
 void lcdSetRotation(uint8_t mode)
 {
   lcd.setRotation(mode);
+  rotation_mode = mode;
+  lcdSaveCfg();
 }
 
 void lcdDrawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color)
@@ -1344,10 +1345,12 @@ void cliLcd(cli_args_t *args)
 
   if (args->argc == 1 && args->isStr(0, "info") == true)
   {
-    cliPrintf("Driver : ST7789\n");
-    cliPrintf("Width  : %d\n", LCD_WIDTH);
-    cliPrintf("Height : %d\n", LCD_HEIGHT);
-    cliPrintf("BKL    : %d%%\n", lcdGetBackLight());
+    cliPrintf("Driver   : ST7789\n");
+    cliPrintf("Width    : %d\n", LCD_WIDTH);
+    cliPrintf("Height   : %d\n", LCD_HEIGHT);
+    cliPrintf("BKL      : %d%%\n", lcdGetBackLight());
+    cliPrintf("Rot Mode : %d%\n", rotation_mode);
+   
     ret = true;
   }
 

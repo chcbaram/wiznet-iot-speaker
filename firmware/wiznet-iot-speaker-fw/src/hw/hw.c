@@ -32,6 +32,9 @@ bool hwInit(void)
   qspiInit();
   flashInit();
   fsInit();
+  nvsInit();
+
+  pwmInit();
   fmcInit();
   buzzerInit();
   i2sInit();

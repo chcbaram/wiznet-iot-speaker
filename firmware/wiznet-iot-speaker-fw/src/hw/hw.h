@@ -29,6 +29,9 @@
 #include "es8156.h"
 #include "encoder.h"
 #include "lcd.h"
+#include "pwm.h"
+#include "nvs.h"
+
 
 bool hwInit(void);
 

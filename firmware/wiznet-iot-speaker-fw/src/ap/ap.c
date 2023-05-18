@@ -34,7 +34,7 @@ void apMain(void)
     {
       rot_i = (rot_i + 1) % 2;
       lcdSetRotation(rot_mode_tbl[rot_i]);
-      logPrintf("rot : %d\n", rot_i);
+      logPrintf("\nrot : %d\n", rot_mode_tbl[rot_i]);
       lcdLogoOn();
       delay(50);
       while(buttonGetPressed(_DEF_BUTTON3));
