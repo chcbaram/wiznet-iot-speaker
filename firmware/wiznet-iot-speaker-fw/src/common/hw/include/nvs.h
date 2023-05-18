@@ -18,13 +18,6 @@ extern "C" {
 #ifdef _USE_HW_NVS
 
 
-typedef struct
-{
-  uint32_t crc;
-  uint32_t len;
-} nvs_tag_t;
-
-
 bool nvsInit(void);
 bool nvsIsInit(void);
 
