@@ -1,36 +1,40 @@
 # wiznet-iot-speaker
 
-- W5300 칩을 사용해서 네트웍으로 사운드 데이터를 실시간 전달 및 스피커로 출력하는 시스템
-- W5300과 MCU를 사용하여 직접 보드를 제작
+- System using the W5300 chip for real-time delivery of sound data over a network and output to speakers
+- Build the board using the W5300 and an MCU
 
-### 개발환경
-- 하드웨어
-    - EasyEDA를 이용해서 온라인으로 회로도 및 아트웍
+### Development Environment
+- Hardware
+    - Schematic and Artwork Online with EasyEDA
     - JLCPCB SMT
-- 펌웨어
+-  Firmware
     - CMake, GCC, Make, STM32CubeH7
     - STM32CubeMX
-- 소프트웨어
+- Software
     - python, pySide6
 
-### 시스템 블럭도
+### System Block Diagram
 ![main_block](https://user-images.githubusercontent.com/5537436/235310490-4343d7cb-b62b-47c4-9ad0-486fb1853087.jpg)
 
-### 기본사양
-구분 | 품명 | 사양 | 비고
+### Specifications
+Category | Product name | Specifications | Remarks
 ---- | ---- | ---- | ----
-MCU | STM32H723ZGT6 | FLASH : 1MB, SRAM : 564KB | 외부 SRAM 버스 16비트
-외부 FLASH | W25Q128JVSIQTR |	16MBytes |	펌웨어 업데이트, 데이터 저장용
-네트워크 |	W5300 | |		16비트 버스 연결
-오디오 H/W #1 |	MAX98357A |	I2S Codec/AMP |	스피커 연결
-오디오 H/W #2 |	ES8156 |	I2S Codec	| AMP 연결
-오디오 압축 | 	Opus 코덱 | |		https://opus-codec.org
+MCU | STM32H723ZGT6 | FLASH : 1MB, SRAM : 564KB | External SRAM bus 16-bit
+External FLASH | W25Q128JVSIQTR |	16MBytes |	For firmware updates, data storage
+Network |	W5300 | |		16-bit bus connection
+Audio H/W #1 |	MAX98357A |	I2S Codec/AMP |	Speaker Connection
+Audio H/W #2 |	ES8156 |	I2S Codec	| AMP Connection
+Audio Compression | 	Opus Codec | |		https://opus-codec.org
 
 
-### 메인보드
+### Main Board
 
 ![main_bd](https://user-images.githubusercontent.com/5537436/235310032-73d421e0-8c94-4bc9-b89e-5fef2ce7070f.jpg)
 
-### 제작보드
+### I/O Board
+
+![Monosnap EasyEDA(Standard) - A Simple and Powerful Electronic Circuit Design Tool 2023-05-20 11-05-31](https://github.com/chcbaram/wiznet-iot-speaker/assets/5537436/c5259e71-b67a-44a9-bfba-e30727a3b760)
+
+### Production Board
 
 ![Monosnap Monosnap 2023-05-14 21-57-32](https://github.com/chcbaram/wiznet-iot-speaker/assets/5537436/5b104284-f17a-4f77-9830-f25a502e559b)
