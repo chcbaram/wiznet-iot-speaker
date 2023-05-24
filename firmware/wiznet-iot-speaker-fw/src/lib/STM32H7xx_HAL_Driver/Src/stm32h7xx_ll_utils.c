@@ -908,6 +908,7 @@ ErrorStatus LL_SetFlashLatency(uint32_t HCLK_Frequency)
   * @{
   */
 
+extern uint32_t    LL_RCC_CalcPLLClockFreq(uint32_t PLLInputFreq, uint32_t M, uint32_t N, uint32_t FRACN, uint32_t PQR);
 
 /**
   * @brief  Function to check that PLL can be modified
