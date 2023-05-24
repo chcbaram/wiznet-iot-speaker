@@ -158,24 +158,28 @@ uint32_t cdcIfGetBaud(void)
 
 bool cdcIfIsConnected(void)
 {
+  bool ret = true;
+
   if (USBD_Device.pClassData == NULL)
   {
-    return false;
+    ret = false;
   }
   if (is_opened == false)
   {
-    return false;
+    ret = false;
   }
   if (USBD_Device.dev_state != USBD_STATE_CONFIGURED)
   {
-    return false;
+    ret = false;
   }
   if (USBD_Device.dev_config == 0)
   {
-    return false;
+    ret = false;
   }
 
-  return true;
+  is_opened = ret;
+
+  return ret;
 }
 
 uint8_t cdcIfGetType(void)
@@ -274,6 +278,7 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
   USBD_SetupReqTypedef *req = (USBD_SetupReqTypedef *)pbuf;
   uint32_t bitrate;
 
+
   switch(cmd)
   {
     case CDC_SEND_ENCAPSULATED_COMMAND:
@@ -347,11 +352,12 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
     case CDC_SET_CONTROL_LINE_STATE:
       // TODO : 나중에 다른 터미널에서 문제 없는지 확인 필요
       //is_opened = req->wValue&0x01;  // 0 bit:DTR, 1 bit:RTS
-      if (req->wValue == 0x03)
+      if (req->wValue & 0x01)
         is_opened = true;
-      if (req->wValue == 0x02)
+      else
         is_opened = false;
-
+        
+      //logPrintf("CDC_SET_CONTROL_LINE_STATE %X\n", req->wValue);
       // if (cdc_type == 0 && LineCoding.bitrate > 57600)
       // {
       //   esp32RequestBoot(req->wValue);

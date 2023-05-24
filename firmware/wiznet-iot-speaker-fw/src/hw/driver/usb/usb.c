@@ -123,7 +123,11 @@ bool usbIsConnect(void)
   {
     return false;
   }
-
+  if (USBD_is_connected() == false)
+  {
+    return false;
+  }
+  
   return true;
 }
 

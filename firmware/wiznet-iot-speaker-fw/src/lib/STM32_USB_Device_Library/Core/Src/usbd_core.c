@@ -845,7 +845,6 @@ USBD_StatusTypeDef USBD_LL_Suspend(USBD_HandleTypeDef *pdev)
   }
 
   pdev->dev_state = USBD_STATE_SUSPENDED;
-
   return USBD_OK;
 }
 
@@ -862,7 +861,6 @@ USBD_StatusTypeDef USBD_LL_Resume(USBD_HandleTypeDef *pdev)
   {
     pdev->dev_state = pdev->dev_old_state;
   }
-
   return USBD_OK;
 }
 

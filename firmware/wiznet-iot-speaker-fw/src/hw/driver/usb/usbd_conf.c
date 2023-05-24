@@ -52,6 +52,7 @@
 
 PCD_HandleTypeDef hpcd_USB_OTG_HS;
 void Error_Handler(void);
+static bool is_connected = false;
 
 /* External functions --------------------------------------------------------*/
 
@@ -69,6 +70,12 @@ USBD_StatusTypeDef USBD_Get_USB_Status(HAL_StatusTypeDef hal_status);
 
 /* USER CODE BEGIN 1 */
 /* USER CODE END 1 */
+
+bool USBD_is_connected(void)
+{
+  return is_connected;
+}
+
 
 /*******************************************************************************
                        LL Driver Callbacks (PCD -> USB Device Library)
@@ -240,6 +247,9 @@ void HAL_PCD_SuspendCallback(PCD_HandleTypeDef *hpcd)
     /* Set SLEEPDEEP bit and SleepOnExit of Cortex System Control Register. */
     SCB->SCR |= (uint32_t)((uint32_t)(SCB_SCR_SLEEPDEEP_Msk | SCB_SCR_SLEEPONEXIT_Msk));
   }
+
+  is_connected = false;
+
   /* USER CODE END 2 */
 }
 
@@ -553,6 +563,8 @@ USBD_StatusTypeDef USBD_LL_SetUSBAddress(USBD_HandleTypeDef *pdev, uint8_t dev_a
   hal_status = HAL_PCD_SetAddress(pdev->pData, dev_addr);
 
   usb_status =  USBD_Get_USB_Status(hal_status);
+
+  is_connected = true;
 
   return usb_status;
 }
