@@ -12,6 +12,7 @@
 #include "qbuffer.h"
 #include "buzzer.h"
 #include "files.h"
+#include "mixer.h"
 
 
 #ifdef _USE_HW_I2S
@@ -38,8 +39,7 @@ static int16_t  i2s_frame_buf[2][I2S_BUF_FRAME_LEN];
 const int16_t   i2s_frame_buf_zero[I2S_BUF_FRAME_LEN] = {0, };
 static uint32_t i2s_frame_len = 0;
 
-static qbuffer_t q_tx;
-static int16_t   q_buf[I2S_BUF_LEN];
+static mixer_t   mixer;
 
 static I2S_HandleTypeDef hi2s1;
 static DMA_HandleTypeDef hdma_spi1_tx;
@@ -72,7 +72,7 @@ bool i2sInit(void)
 
   i2s_frame_len = (i2s_sample_rate * 2 * I2S_BUF_MS) / 1000;
 
-  qbufferCreateBySize(&q_tx, (uint8_t *)q_buf, 2, I2S_BUF_LEN);
+  mixerInit(&mixer);
 
   i2sStart();
 
@@ -146,23 +146,22 @@ bool i2sStop(void)
 
 int8_t i2sGetEmptyChannel(void)
 {
-  return 0;
+  return mixerGetEmptyChannel(&mixer);
+}
+
+uint32_t i2sGetFrameSize(void)
+{
+  return i2s_frame_len;
 }
 
 uint32_t i2sAvailableForWrite(uint8_t ch)
 {
-  uint32_t rx_len;
-  uint32_t wr_len;
-
-  rx_len = qbufferAvailable(&q_tx);
-  wr_len = (q_tx.len - 1) - rx_len;  
-
-  return wr_len;
+  return mixerAvailableForWrite(&mixer, ch);
 }
 
 bool i2sWrite(uint8_t ch, int16_t *p_data, uint32_t length)
 {
-  return qbufferWrite(&q_tx, (uint8_t *)p_data, length);
+  return mixerWrite(&mixer, ch, p_data, length);
 }
 
 // https://m.blog.naver.com/PostView.nhn?blogId=hojoon108&logNo=80145019745&proxyReferer=https:%2F%2Fwww.google.com%2F
@@ -257,9 +256,9 @@ void HAL_I2S_TxCpltCallback(I2S_HandleTypeDef *hi2s)
 
 void HAL_I2S_TxHalfCpltCallback(I2S_HandleTypeDef *hi2s)
 {
-  if (qbufferAvailable(&q_tx) >= i2s_frame_len)
+  if (mixerAvailable(&mixer) >= i2s_frame_len)
   {    
-    qbufferRead(&q_tx, (uint8_t *)i2s_frame_buf[i2s_frame_cur_i], i2s_frame_len);
+    mixerRead(&mixer, i2s_frame_buf[i2s_frame_cur_i], i2s_frame_len);
     i2s_frame_update = true;
   }
 }
@@ -479,9 +478,9 @@ void cliI2s(cli_args_t *args)
 
     i2sSetSampleRate(header.SampleRate);
 
-    r_len = i2s_frame_len/2;
+    r_len = i2sGetFrameSize()/2;
 
-    int16_t buf_frame[i2s_frame_len];
+    int16_t buf_frame[i2sGetFrameSize()];
 
     fseek(fp, sizeof(wavfile_header_t) + 1024, SEEK_SET);
 

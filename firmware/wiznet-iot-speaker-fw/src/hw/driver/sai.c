@@ -4,6 +4,7 @@
 #include "qbuffer.h"
 #include "buzzer.h"
 #include "files.h"
+#include "mixer.h"
 
 
 #ifdef _USE_HW_SAI
@@ -30,8 +31,7 @@ static int16_t  sai_frame_buf[2][SAI_BUF_FRAME_LEN];
 const int16_t   sai_frame_buf_zero[SAI_BUF_FRAME_LEN] = {0, };
 static uint32_t sai_frame_len = 0;
 
-static qbuffer_t q_tx;
-static int16_t   q_buf[SAI_BUF_LEN];
+static mixer_t   mixer;
 
 static SAI_HandleTypeDef hsai_BlockA1;
 static DMA_HandleTypeDef hdma_sai1_a;
@@ -63,8 +63,8 @@ bool saiInit(void)
   }
 
   sai_frame_len = (sai_sample_rate * 2 * SAI_BUF_MS) / 1000;
-
-  qbufferCreateBySize(&q_tx, (uint8_t *)q_buf, 2, SAI_BUF_LEN);
+  
+  mixerInit(&mixer);
 
   saiStart();
 
@@ -132,23 +132,22 @@ bool saiStop(void)
 
 int8_t saiGetEmptyChannel(void)
 {
-  return 0;
+  return mixerGetEmptyChannel(&mixer);
+}
+
+uint32_t saiGetFrameSize(void)
+{
+  return sai_frame_len;
 }
 
 uint32_t saiAvailableForWrite(uint8_t ch)
 {
-  uint32_t rx_len;
-  uint32_t wr_len;
-
-  rx_len = qbufferAvailable(&q_tx);
-  wr_len = (q_tx.len - 1) - rx_len;  
-
-  return wr_len;
+  return mixerAvailableForWrite(&mixer, ch);
 }
 
 bool saiWrite(uint8_t ch, int16_t *p_data, uint32_t length)
 {
-  return qbufferWrite(&q_tx, (uint8_t *)p_data, length);
+  return mixerWrite(&mixer, ch, p_data, length);
 }
 
 // https://m.blog.naver.com/PostView.nhn?blogId=hojoon108&logNo=80145019745&proxyReferer=https:%2F%2Fwww.google.com%2F
@@ -243,9 +242,9 @@ void HAL_SAI_TxCpltCallback(SAI_HandleTypeDef *hi2s)
 
 void HAL_SAI_TxHalfCpltCallback(SAI_HandleTypeDef *hi2s)
 {
-  if (qbufferAvailable(&q_tx) >= sai_frame_len)
+  if (mixerAvailable(&mixer) >= sai_frame_len)
   {    
-    qbufferRead(&q_tx, (uint8_t *)sai_frame_buf[sai_frame_cur_i], sai_frame_len);
+    mixerRead(&mixer, sai_frame_buf[sai_frame_cur_i], sai_frame_len);
     sai_frame_update = true;
   }
 }

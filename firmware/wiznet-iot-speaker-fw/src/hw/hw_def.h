@@ -84,6 +84,10 @@
 #define      HW_LCD_WIDTH           240
 #define      HW_LCD_HEIGHT          240
 
+#define _USE_HW_MIXER
+#define      HW_MIXER_MAX_CH        8
+#define      HW_MIXER_MAX_BUF_LEN   (48*2*4*2) // 48Khz * Stereo * 4ms * 2
+
 
 #define _PIN_GPIO_W5300_RST         0
 #define _PIN_GPIO_SDCARD_DETECT     1
