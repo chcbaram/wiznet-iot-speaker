@@ -28,10 +28,11 @@
 #define      HW_LED_MAX_CH          2
 
 #define _USE_HW_UART
-#define      HW_UART_MAX_CH         3
+#define      HW_UART_MAX_CH         4
 #define      HW_UART_CH_SWD         _DEF_UART1
 #define      HW_UART_CH_DEBUG       _DEF_UART2
 #define      HW_UART_CH_TTL         _DEF_UART3
+#define      HW_UART_CH_USB         _DEF_UART4
 
 #define _USE_HW_CLI
 #define      HW_CLI_CMD_LIST_MAX    32
@@ -87,6 +88,11 @@
 #define _USE_HW_MIXER
 #define      HW_MIXER_MAX_CH        8
 #define      HW_MIXER_MAX_BUF_LEN   (48*2*4*2) // 48Khz * Stereo * 4ms * 2
+
+#define _USE_HW_USB
+#define _USE_HW_CDC
+#define      HW_USE_CDC             1
+#define      HW_USE_MSC             1
 
 
 #define _PIN_GPIO_W5300_RST         0

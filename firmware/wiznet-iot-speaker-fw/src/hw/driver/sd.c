@@ -61,12 +61,19 @@ bool sdInit(void)
 
   is_init = ret;
 
-  logPrintf("[%s] sdInit()\n", ret ? "OK":"NG");
+
+  static bool is_reinit = false;
+
+  if (is_reinit == false)
+    logPrintf("[%s] sdInit()\n", ret ? "OK":"NG");
 
 #ifdef _USE_HW_CLI
-  cliAdd("sd", cliSd);
+  if (is_reinit == false)
+    cliAdd("sd", cliSd);
 #endif
 
+  is_reinit = true;
+  
   return ret;
 }
 

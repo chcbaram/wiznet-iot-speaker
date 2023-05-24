@@ -29,7 +29,7 @@
 #include "spi.h"
 #include "tim.h"
 #include "usart.h"
-#include "usb_otg.h"
+#include "usb_device.h"
 #include "gpio.h"
 #include "fmc.h"
 
@@ -112,7 +112,6 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_USART3_UART_Init();
-  MX_USB_OTG_HS_PCD_Init();
   MX_FDCAN2_Init();
   MX_I2C4_Init();
   MX_SPI6_Init();
@@ -121,6 +120,7 @@ int main(void)
   MX_TIM13_Init();
   MX_FMC_Init();
   MX_USART6_UART_Init();
+  MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */

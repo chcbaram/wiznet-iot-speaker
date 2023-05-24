@@ -44,6 +44,18 @@ bool hwInit(void)
   dxlInit();
   sdInit();
   fatfsInit();
+
+  usbInit();
+  if (buttonGetPressed(_DEF_BUTTON2) == true)
+  {
+    usbBegin(USB_MSC_MODE);
+  }
+  else
+  {
+    usbBegin(USB_CDC_MODE);
+    cdcInit();
+  }
+
   encoderInit();
   lcdInit();
 

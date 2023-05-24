@@ -1,11 +1,13 @@
 #include "uart.h"
 #include "qbuffer.h"
 #include "cli.h"
+#include "cdc.h"
 
 #ifdef _USE_HW_UART
 
 
 #define UART_RX_BUF_LENGTH        1024
+
 
 
 typedef struct
@@ -54,6 +56,7 @@ const static uart_hw_t uart_hw_tbl[UART_MAX_CH] =
     {"USART2 SWD   ", USART2, &huart2, &hdma_usart2_rx, NULL, false},
     {"USART1 DEBUG ", USART1, &huart1, &hdma_usart1_rx, NULL, false},
     {"USART3 TTL   ", USART3, &huart3, &hdma_usart3_rx, NULL, true},
+    {"USB    USB   ", NULL, NULL, NULL, NULL, true},   
   };
 
 
@@ -155,6 +158,12 @@ bool uartOpen(uint8_t ch, uint32_t baud)
         uart_tbl[ch].qbuffer.out = uart_tbl[ch].qbuffer.in;
       }
       break;
+
+    case _DEF_UART4:
+      uart_tbl[ch].baud    = baud;
+      uart_tbl[ch].is_open = true;
+      ret = true;
+      break;      
   }
 
   return ret;
@@ -182,6 +191,10 @@ uint32_t uartAvailable(uint8_t ch)
       uart_tbl[ch].qbuffer.in = (uart_tbl[ch].qbuffer.len - ((DMA_Stream_TypeDef *)uart_tbl[ch].p_hdma_rx->Instance)->NDTR);
       ret = qbufferAvailable(&uart_tbl[ch].qbuffer);      
       break;
+
+    case _DEF_UART4:
+      ret = cdcAvailable();
+      break;      
   }
 
   return ret;
@@ -217,6 +230,10 @@ uint8_t uartRead(uint8_t ch)
     case _DEF_UART3:
       qbufferRead(&uart_tbl[ch].qbuffer, &ret, 1);
       break;
+
+    case _DEF_UART4:
+      ret = cdcRead();
+      break;      
   }
   uart_tbl[ch].rx_cnt++;
 
@@ -238,6 +255,10 @@ uint32_t uartWrite(uint8_t ch, uint8_t *p_data, uint32_t length)
         ret = length;
       }
       break;
+
+    case _DEF_UART4:
+      ret = cdcWrite(p_data, length);
+      break;      
   }
   uart_tbl[ch].tx_cnt += ret;
 
@@ -269,7 +290,10 @@ uint32_t uartGetBaud(uint8_t ch)
 
   if (ch >= UART_MAX_CH) return 0;
 
-  ret = uart_tbl[ch].baud;
+  if (ch == HW_UART_CH_USB)
+    ret = cdcGetBaud();
+  else
+    ret = uart_tbl[ch].baud;
   
   return ret;
 }

@@ -31,6 +31,8 @@
 #include "lcd.h"
 #include "pwm.h"
 #include "nvs.h"
+#include "usb.h"
+#include "cdc.h"
 
 
 bool hwInit(void);

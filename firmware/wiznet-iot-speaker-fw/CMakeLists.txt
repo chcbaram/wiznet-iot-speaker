@@ -22,6 +22,8 @@ file(GLOB SRC_FILES CONFIGURE_DEPENDS
   src/lib/FatFs/src/*.c
   src/lib/FatFs/src/option/syscall.c
   src/lib/FatFs/src/option/unicode.c
+
+  src/lib/STM32_USB_Device_Library/Core/Src/*.c
 )
 
 file(GLOB_RECURSE SRC_FILES_RECURSE CONFIGURE_DEPENDS
@@ -50,12 +52,16 @@ target_include_directories(${EXECUTABLE} PRIVATE
   src/common/hw/include 
   src/hw
   src/hw/driver/fatfs
+  src/hw/driver/usb
+  src/hw/driver/usb/usb_cdc
+  src/hw/driver/usb/usb_msc
   src/lib
 
   src/lib/CMSIS/Include
   src/lib/CMSIS/Device/ST/STM32H7xx/Include
   src/lib/STM32H7xx_HAL_Driver/Inc
   src/lib/FatFs/src
+  src/lib/STM32_USB_Device_Library/Core/Inc
 )
 
 target_compile_definitions(${EXECUTABLE} PRIVATE
