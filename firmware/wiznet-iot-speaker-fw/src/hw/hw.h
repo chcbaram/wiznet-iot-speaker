@@ -33,6 +33,8 @@
 #include "nvs.h"
 #include "usb.h"
 #include "cdc.h"
+#include "rtc.h"
+#include "reset.h"
 
 
 bool hwInit(void);
