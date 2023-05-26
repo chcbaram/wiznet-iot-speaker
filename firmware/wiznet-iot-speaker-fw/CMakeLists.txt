@@ -15,6 +15,7 @@ set(EXECUTABLE ${PRJ_NAME}.elf)
 
 
 file(GLOB SRC_FILES CONFIGURE_DEPENDS
+  src/*.cpp
   src/*.c
   src/bsp/*.c
   src/bsp/device/*.c
@@ -27,6 +28,7 @@ file(GLOB SRC_FILES CONFIGURE_DEPENDS
 )
 
 file(GLOB_RECURSE SRC_FILES_RECURSE CONFIGURE_DEPENDS
+  src/ap/*.cpp
   src/ap/*.c
   src/bsp/*.s
   src/common/*.c
@@ -59,6 +61,7 @@ target_include_directories(${EXECUTABLE} PRIVATE
 
   src/lib/CMSIS/Include
   src/lib/CMSIS/Device/ST/STM32H7xx/Include
+  src/lib/CMSIS/DSP/Include
   src/lib/STM32H7xx_HAL_Driver/Inc
   src/lib/FatFs/src
   src/lib/STM32_USB_Device_Library/Core/Inc
@@ -97,4 +100,8 @@ target_link_options(${EXECUTABLE} PRIVATE
   -Wl,-Map=${PRJ_NAME}.map,--cref
   -Wl,--gc-sections
   -Xlinker -print-memory-usage -Xlinker
+  )
+
+target_link_libraries( ${EXECUTABLE} PRIVATE
+  ${CMAKE_SOURCE_DIR}/src/lib/CMSIS/DSP/Lib/GCC/libarm_cortexM7lfdp_math.a 
   )

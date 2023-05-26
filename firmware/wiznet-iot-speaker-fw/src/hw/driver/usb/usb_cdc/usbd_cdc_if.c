@@ -335,6 +335,10 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
       {
         CDC_Reset_Status = 1;
       }
+      if (LineCoding.bitrate == 115200)
+        cdc_type = 1;
+      else
+        cdc_type = 0;
     break;
 
     case CDC_GET_LINE_CODING:

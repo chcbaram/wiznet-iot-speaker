@@ -142,8 +142,11 @@ bool cliOpen(uint8_t ch, uint32_t baud)
 
   if (cli_node.is_open == false || cli_node.baud != baud)
   {
-    cli_node.baud = baud;
-    cli_node.is_open = uartOpen(ch, baud);
+    if (baud > 0)
+    {
+      cli_node.baud = baud;
+      cli_node.is_open = uartOpen(ch, baud);
+    }
   }
 
   return cli_node.is_open;

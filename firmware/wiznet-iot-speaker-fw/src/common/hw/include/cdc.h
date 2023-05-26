@@ -1,12 +1,5 @@
-/*
- * cdc.h
- *
- *  Created on: 2021. 11. 14.
- *      Author: baram
- */
-
-#ifndef SRC_COMMON_HW_INCLUDE_CDC_H_
-#define SRC_COMMON_HW_INCLUDE_CDC_H_
+#ifndef CDC_H_
+#define CDC_H_
 
 
 #ifdef __cplusplus

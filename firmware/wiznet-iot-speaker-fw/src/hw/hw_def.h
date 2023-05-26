@@ -18,7 +18,6 @@
 #define _USE_HW_SD
 #define _USE_HW_FATFS
 #define _USE_HW_FILES
-#define _USE_HW_I2S
 #define _USE_HW_SAI
 #define _USE_HW_ES8156
 #define _USE_HW_NVS
@@ -100,6 +99,9 @@
 #define _USE_HW_RTC
 #define      HW_RTC_BOOT_MODE       RTC_BKP_DR3
 #define      HW_RTC_RESET_BITS      RTC_BKP_DR4
+
+#define _USE_HW_I2S
+#define      HW_I2S_LCD             1
 
 
 #define _PIN_GPIO_W5300_RST         0

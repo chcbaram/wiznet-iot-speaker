@@ -17,6 +17,28 @@
 
 #ifdef _USE_HW_I2S
 
+#if HW_I2S_LCD > 0
+#include "lcd.h"
+#define FFT_LEN         512
+#define BLOCK_X_CNT     12
+#define BLOCK_Y_CNT     12
+
+typedef struct
+{
+  uint32_t pre_time_lcd;
+  uint8_t  update_cnt;
+  q15_t    buf_q15[FFT_LEN*2];
+
+  uint8_t block_target[BLOCK_X_CNT];
+  uint8_t block_peak[BLOCK_X_CNT];
+  uint8_t block_value[BLOCK_X_CNT];
+
+} i2s_cli_t;
+
+static void drawBlock(int16_t bx, int16_t by, uint16_t color);
+static bool lcdUpdate(i2s_cli_t *p_args);
+#endif
+
 
 #define I2S_SAMPLERATE_HZ       16000
 #define I2S_BUF_MS              (4)
@@ -234,6 +256,66 @@ bool i2sPlayBeep(uint32_t freq_hz, uint16_t volume, uint32_t time_ms)
   return true;
 }
 
+#if HW_I2S_LCD > 0
+bool i2sPlayBeepLcd(i2s_cli_t *p_i2s_cli, uint32_t freq_hz, uint16_t volume, uint32_t time_ms)
+{
+  uint32_t pre_time;
+  int32_t sample_rate = i2s_sample_rate;
+  int32_t num_samples = i2s_frame_len;
+  float sample_point;
+  int16_t sample[num_samples];
+  int16_t sample_index = 0;
+  float div_freq;
+  int8_t mix_ch;
+  int32_t volume_out;
+  uint32_t q15_buf_index = 0;
+
+
+  volume = constrain(volume, 0, 100);
+  volume_out = (INT16_MAX/40) * volume / 100;
+
+  mix_ch =  i2sGetEmptyChannel();
+
+  div_freq = (float)sample_rate/(float)freq_hz;
+
+  pre_time = millis();
+  while(millis()-pre_time <= time_ms)
+  {
+    if (i2sAvailableForWrite(mix_ch) >= num_samples)
+    {
+      for (int i=0; i<num_samples; i+=2)
+      {
+        sample_point = i2sSin(2.0f * M_PI * (float)(sample_index) / ((float)div_freq));
+        sample[i + 0] = (int16_t)(sample_point * volume_out);
+        sample[i + 1] = (int16_t)(sample_point * volume_out);
+        sample_index = (sample_index + 1) % (int)(div_freq);
+
+        if (q15_buf_index < 512)
+        {
+          p_i2s_cli->buf_q15[q15_buf_index*2 + 0] = sample[i + 0];
+          p_i2s_cli->buf_q15[q15_buf_index*2 + 1] = 0;
+          
+          q15_buf_index++;            
+        }
+      }
+      i2sWrite(mix_ch, (int16_t *)sample, num_samples);
+    }
+    delay(1);
+
+    if (q15_buf_index == 512)
+    {        
+      if (lcdUpdate(p_i2s_cli) == true)
+      {
+        q15_buf_index = 0;
+      }        
+    }
+  }
+
+  lcdLogoOn();
+
+  return true;
+}
+#endif
 
 void HAL_I2S_TxCpltCallback(I2S_HandleTypeDef *hi2s)
 {
@@ -396,11 +478,117 @@ typedef struct wavfile_header_s
   int32_t Subchunk2Size;
 } wavfile_header_t;
 
+#if HW_I2S_LCD > 0
+static void drawBlock(int16_t bx, int16_t by, uint16_t color)
+{
+  int16_t x;
+  int16_t y;
+  int16_t bw;
+  int16_t bh;
+  int16_t top_space = 32;
+  int16_t sw;
+  int16_t sh;
+
+  sw = lcdGetWidth();
+  sh = lcdGetHeight()-top_space;
+
+  bw = (sw / BLOCK_X_CNT);
+  bh = (sh / BLOCK_Y_CNT);
+
+  x = bx*bw;
+  y = sh - bh*by - bh;
+
+  lcdDrawFillRect(x, y+top_space, bw-2, bh-2, color);
+}
+
+bool lcdUpdate(i2s_cli_t *p_args)
+{
+  bool ret = false;
+
+  if (millis()-p_args->pre_time_lcd >= 50 && lcdDrawAvailable() == true)
+  {
+    p_args->pre_time_lcd = millis();
+
+    lcdClearBuffer(black);
+
+    arm_cfft_q15(&arm_cfft_sR_q15_len512, p_args->buf_q15, 0, 1);
+
+    int16_t xi;
+
+    xi = 0;
+    for (int i=0; i<BLOCK_X_CNT; i++)
+    {
+      int32_t h;
+      int32_t max_h;
+
+
+      max_h = 0;
+      for (int j=0; j<FFT_LEN/2/BLOCK_X_CNT; j++)
+      {
+        h = p_args->buf_q15[2*xi + 1];
+        h = constrain(h, 0, 500);
+        h = cmap(h, 0, 500, 0, 80);
+        if (h > max_h)
+        {
+          max_h = h;
+        }
+        xi++;
+      }
+      h = cmap(max_h, 0, 80, 0, BLOCK_Y_CNT-1);
+
+      p_args->block_target[i] = h;
+
+      if (p_args->update_cnt%2 == 0)
+      {
+        if (p_args->block_peak[i] > 0)
+        {
+          p_args->block_peak[i]--;
+        }
+      }
+      if (h >= p_args->block_peak[i])
+      {
+        p_args->block_peak[i] = h;
+        p_args->block_value[i] = h;
+      }
+    }
+
+    p_args->update_cnt++;
+
+    for (int i=0; i<BLOCK_X_CNT; i++)
+    {
+      drawBlock(i, p_args->block_peak[i], red);
+
+      if (p_args->block_value[i] > p_args->block_target[i])
+      {
+        p_args->block_value[i]--;
+      }
+      for (int j=0; j<p_args->block_value[i]; j++)
+      {
+        drawBlock(i, j, yellow);
+      }
+    }
+
+    lcdRequestDraw();
+    ret = true;
+  }
+
+  return ret;
+}
+#endif
+
 
 void cliI2s(cli_args_t *args)
 {
   bool ret = false;
 
+  #if HW_I2S_LCD > 0
+  uint32_t q15_buf_index = 0;
+  i2s_cli_t i2s_args;
+
+  memset(i2s_args.block_peak, 0, sizeof(i2s_args.block_peak));
+  memset(i2s_args.block_value, 0, sizeof(i2s_args.block_value));
+  memset(i2s_args.block_target, 0, sizeof(i2s_args.block_target));
+  #endif
 
 
   if (args->argc == 1 && args->isStr(0, "info") == true)
@@ -421,7 +609,11 @@ void cliI2s(cli_args_t *args)
     freq = args->getData(1);
     time_ms = args->getData(2);
     
+    #if HW_I2S_LCD > 0
+    i2sPlayBeepLcd(&i2s_args, freq, 100, time_ms);
+    #else
     i2sPlayBeep(freq, 100, time_ms);
+    #endif
 
     ret = true;
   }
@@ -449,7 +641,6 @@ void cliI2s(cli_args_t *args)
     uint32_t r_len;
     int32_t  volume = 100;
     int8_t ch;
-
 
     file_name = args->getStr(1);
 
@@ -515,12 +706,37 @@ void cliI2s(cli_args_t *args)
             buf_data[1] = buf_frame[i] * volume / 100;;
           }
 
+          #if HW_I2S_LCD > 0
+          if (q15_buf_index < FFT_LEN)
+          {
+            i2s_args.buf_q15[q15_buf_index*2 + 0] = buf_data[0];
+            i2s_args.buf_q15[q15_buf_index*2 + 1] = 0;
+            
+            q15_buf_index++;            
+          }
+          #endif
+
           i2sWrite(ch, (int16_t *)buf_data, 2);
         }
+
+        #if HW_I2S_LCD > 0
+        if (q15_buf_index == FFT_LEN)
+        {        
+          if (lcdUpdate(&i2s_args) == true)
+          {
+            q15_buf_index = 0;
+          }        
+        }
+        #endif
+
       }
     }
 
     fclose(fp);
+
+    #if HW_I2S_LCD > 0
+    lcdLogoOn();
+    #endif
 
     ret = true;
   }

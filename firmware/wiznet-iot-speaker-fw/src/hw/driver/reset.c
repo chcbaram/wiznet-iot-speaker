@@ -101,7 +101,8 @@ void resetLog(void)
 
 void resetToBoot(void)
 {
-
+  resetSetBootMode(1<<MODE_BIT_BOOT);
+  resetToReset();
 }
 
 void resetToReset(void)
