@@ -1,4 +1,5 @@
 #include "ap.h"
+#include "thread/cmd/cmd_thread.h"
 
 
 
@@ -6,8 +7,9 @@
 void apInit(void)
 {
   cliOpen(_DEF_UART1, 115200);
-
   logBoot(false);
+
+  cmdThreadInit();
 }
 
 void apMain(void)
@@ -39,7 +41,7 @@ void apMain(void)
     }
     sdUpdate();
 
-    if (usbIsOpen())
+    if (usbIsOpen() && usbGetType() == USB_CON_CLI)
     {
       cli_ch = HW_UART_CH_USB;
     }
@@ -52,6 +54,10 @@ void apMain(void)
       cliOpen(cli_ch, 0);
     }
 
+    if (cli_ch != HW_UART_CH_USB)
+    {
+      cmdThreadUpdate();
+    }
     cliMain();
   }
 }

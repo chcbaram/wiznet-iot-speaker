@@ -103,6 +103,9 @@
 #define _USE_HW_I2S
 #define      HW_I2S_LCD             1
 
+#define _USE_HW_CMD
+#define      HW_CMD_MAX_DATA_LENGTH 2048
+
 
 #define _PIN_GPIO_W5300_RST         0
 #define _PIN_GPIO_SDCARD_DETECT     1
@@ -110,5 +113,17 @@
 #define _PIN_GPIO_LCD_BLK           7
 #define _PIN_GPIO_LCD_RST           8
 #define _PIN_GPIO_LCD_DC            9
+
+
+
+#define FLASH_SIZE_TAG              0x400
+#define FLASH_SIZE_VER              0x400
+#define FLASH_SIZE_FIRM             (1024*1024)
+
+#define FLASH_ADDR_BOOT             0x08000000
+#define FLASH_ADDR_FIRM             0x08000000
+
+#define FLASH_ADDR_UPDATE           0x90800000
+
 
 #endif

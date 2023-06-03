@@ -18,15 +18,12 @@
 #define ERR_BOOT_INVALID_FW           0x0010
 #define ERR_BOOT_FW_CRC               0x0011
 #define ERR_BOOT_JUMP_TO_FW           0x0012
-#define ERR_BOOT_TAG_MAGIC            0x0013
-#define ERR_BOOT_TAG_SIZE             0x0014
-#define ERR_BOOT_FLASH_READ           0x0015
 
 
 #define ERR_CMD_MAX_LENGTH            0x0020
 #define ERR_CMD_CHECKSUM              0x0021
 #define ERR_CMD_RX_TIMEOUT            0x0022
-#define ERR_CMD_NO_CMD                0x0023
+#define ERR_CMD_RX_LENGTH             0x0023
 
 
 

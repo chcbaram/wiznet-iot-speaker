@@ -328,9 +328,6 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
       LineCoding.datatype  = pbuf[6];
       LineCoding.bitrate   = bitrate - (bitrate%10);
 
-      cdc_type = bitrate % 10;
-      // esp32SetBaud(LineCoding.bitrate);
-
       if( LineCoding.bitrate == 1200 )
       {
         CDC_Reset_Status = 1;

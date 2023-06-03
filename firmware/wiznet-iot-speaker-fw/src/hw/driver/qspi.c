@@ -334,7 +334,7 @@ uint8_t BSP_QSPI_Init(void)
   hqspi.Init.FifoThreshold       = 4;
   hqspi.Init.DualQuad            = HAL_OSPI_DUALQUAD_DISABLE;
   hqspi.Init.MemoryType          = HAL_OSPI_MEMTYPE_MICRON;
-  hqspi.Init.DeviceSize          = POSITION_VAL(W25Q128FV_FLASH_SIZE) - 1;
+  hqspi.Init.DeviceSize          = POSITION_VAL(W25Q128FV_FLASH_SIZE);
   hqspi.Init.ChipSelectHighTime  = 5;
   hqspi.Init.FreeRunningClock    = HAL_OSPI_FREERUNCLK_DISABLE;
   hqspi.Init.ClockMode           = HAL_OSPI_CLOCK_MODE_0;

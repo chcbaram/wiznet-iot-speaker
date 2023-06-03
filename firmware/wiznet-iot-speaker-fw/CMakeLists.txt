@@ -105,3 +105,9 @@ target_link_options(${EXECUTABLE} PRIVATE
 target_link_libraries( ${EXECUTABLE} PRIVATE
   ${CMAKE_SOURCE_DIR}/src/lib/CMSIS/DSP/Lib/GCC/libarm_cortexM7lfdp_math.a 
   )
+
+add_custom_command(TARGET ${EXECUTABLE} 
+  POST_BUILD
+  COMMAND ${CMAKE_OBJCOPY} ARGS -O binary ${EXECUTABLE} ${PROJECT_NAME}.bin
+  COMMENT "Invoking: Make Binary"
+  )  

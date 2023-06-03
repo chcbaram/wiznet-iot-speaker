@@ -47,7 +47,7 @@ MEMORY
   DTCMRAM (xrw)    : ORIGIN = 0x20000000,   LENGTH = 128K
 
   VECTOR   (rx)    : ORIGIN = 0x08000000,   LENGTH = 1K
-  TAG      (rx)    : ORIGIN = 0x08000400,   LENGTH = 1K
+  VER      (rx)    : ORIGIN = 0x08000400,   LENGTH = 1K
   FLASH    (rx)    : ORIGIN = 0x08000800,   LENGTH = 1022K
 
   RAM_D1  (xrw)    : ORIGIN = 0x24000000,   LENGTH = 320K
@@ -73,12 +73,12 @@ SECTIONS
     . = ALIGN(4);
   } >VECTOR
 
-  .tag :
+  .version :
   {
     . = ALIGN(4);
-    KEEP(*(.tag))
+    KEEP(*(.version))
     . = ALIGN(4);
-  } >TAG
+  } >VER
 
 
   /* The program code and other data goes into FLASH */

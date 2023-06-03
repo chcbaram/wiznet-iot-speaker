@@ -1,0 +1,254 @@
+#include "cmd_boot.h"
+
+
+#define BOOT_CMD_INFO                   0x0000
+#define BOOT_CMD_VERSION                0x0001
+
+#define BOOT_CMD_FLASH_ERASE            0x0003
+#define BOOT_CMD_FLASH_WRITE            0x0004
+#define BOOT_CMD_FLASH_READ             0x0005
+
+#define BOOT_CMD_FW_VER                 0x0006
+#define BOOT_CMD_FW_ERASE               0x0007
+#define BOOT_CMD_FW_WRITE               0x0008
+#define BOOT_CMD_FW_READ                0x0009
+#define BOOT_CMD_FW_VERIFY              0x000A
+#define BOOT_CMD_FW_UPDATE              0x000B
+#define BOOT_CMD_FW_JUMP                0x000C
+
+
+static boot_info_t    boot_info;
+static boot_version_t boot_version;
+
+
+
+static void bootInfo(cmd_t *p_cmd)
+{
+  boot_info.mode = 1;
+
+  cmdSendResp(p_cmd, p_cmd->packet.cmd, CMD_OK, (uint8_t *)&boot_info, sizeof(boot_info_t));
+}
+
+static void bootVersion(cmd_t *p_cmd)
+{
+  strcpy(boot_version.boot.name_str, "Empty");
+
+  strcpy(boot_version.firm.name_str, _DEF_BOARD_NAME);
+  strcpy(boot_version.firm.version_str, _DEF_FIRMWATRE_VERSION);
+
+  cmdSendResp(p_cmd, p_cmd->packet.cmd, CMD_OK, (uint8_t *)&boot_version, sizeof(boot_version_t));
+}
+
+static void bootFirmVersion(cmd_t *p_cmd)
+{
+  cmdSendResp(p_cmd, p_cmd->packet.cmd, CMD_OK, (uint8_t *)(FLASH_ADDR_FIRM + FLASH_SIZE_VER), sizeof(firm_ver_t));
+}
+
+static void bootFirmErase(cmd_t *p_cmd)
+{
+  uint32_t addr = 0;
+  uint32_t length = 0;
+  cmd_packet_t *p_packet = &p_cmd->packet;
+  uint16_t err_code = CMD_OK;
+
+
+  addr  = ((uint32_t)p_packet->data[0] <<  0);
+  addr |= ((uint32_t)p_packet->data[1] <<  8);
+  addr |= ((uint32_t)p_packet->data[2] << 16);
+  addr |= ((uint32_t)p_packet->data[3] << 24);
+
+  length  = ((uint32_t)p_packet->data[4] <<  0);
+  length |= ((uint32_t)p_packet->data[5] <<  8);
+  length |= ((uint32_t)p_packet->data[6] << 16);
+  length |= ((uint32_t)p_packet->data[7] << 24);
+
+  if ((addr+length) < FLASH_SIZE_FIRM)
+  {    
+    if (flashErase(FLASH_ADDR_UPDATE + addr, length) != true)
+    {
+      err_code = ERR_BOOT_FLASH_ERASE;
+    }
+  }
+  else
+  {
+    err_code = ERR_BOOT_WRONG_RANGE;
+  } 
+
+  cmdSendResp(p_cmd, p_cmd->packet.cmd, err_code, NULL, 0);
+}
+
+static void bootFirmWrite(cmd_t *p_cmd)
+{
+  uint32_t addr = 0;
+  uint32_t length = 0;
+  cmd_packet_t *p_packet = &p_cmd->packet;
+  uint16_t err_code = CMD_OK;
+
+
+  addr  = ((uint32_t)p_packet->data[0] <<  0);
+  addr |= ((uint32_t)p_packet->data[1] <<  8);
+  addr |= ((uint32_t)p_packet->data[2] << 16);
+  addr |= ((uint32_t)p_packet->data[3] << 24);
+
+  length  = ((uint32_t)p_packet->data[4] <<  0);
+  length |= ((uint32_t)p_packet->data[5] <<  8);
+  length |= ((uint32_t)p_packet->data[6] << 16);
+  length |= ((uint32_t)p_packet->data[7] << 24);
+
+  if ((addr+length) < FLASH_SIZE_FIRM)
+  {    
+    if (flashWrite(FLASH_ADDR_UPDATE + addr, &p_packet->data[8], length) != true)
+    {
+      err_code = ERR_BOOT_FLASH_WRITE;
+    }
+  }
+  else
+  {
+    err_code = ERR_BOOT_WRONG_RANGE;
+  } 
+
+  cmdSendResp(p_cmd, p_cmd->packet.cmd, err_code, NULL, 0);
+}
+
+static void bootFirmRead(cmd_t *p_cmd)
+{
+  uint32_t addr = 0;
+  uint32_t length = 0;
+  cmd_packet_t *p_packet = &p_cmd->packet;
+  uint16_t err_code = CMD_OK;
+
+
+  addr  = ((uint32_t)p_packet->data[0] <<  0);
+  addr |= ((uint32_t)p_packet->data[1] <<  8);
+  addr |= ((uint32_t)p_packet->data[2] << 16);
+  addr |= ((uint32_t)p_packet->data[3] << 24);
+
+  length  = ((uint32_t)p_packet->data[4] <<  0);
+  length |= ((uint32_t)p_packet->data[5] <<  8);
+  length |= ((uint32_t)p_packet->data[6] << 16);
+  length |= ((uint32_t)p_packet->data[7] << 24);
+
+  if ((addr+length) < FLASH_SIZE_FIRM)
+  {    
+    if (flashRead(FLASH_ADDR_UPDATE + addr, &p_packet->data[0], length) != true)
+    {
+      err_code = ERR_BOOT_FLASH_WRITE;
+    }
+  }
+  else
+  {
+    err_code = ERR_BOOT_WRONG_RANGE;
+  } 
+
+  cmdSendResp(p_cmd, p_cmd->packet.cmd, err_code, p_packet->data, length);
+}
+
+static void bootFirmVerify(cmd_t *p_cmd)
+{
+  uint32_t addr = 0;
+  uint32_t length = 0;
+  uint16_t crc;
+  uint16_t err_code = CMD_OK;
+  uint32_t rd_len;
+  uint8_t  rd_buf[128];
+  firm_tag_t tag;
+
+  do 
+  {
+    firm_tag_t *p_tag = (firm_tag_t *)&tag;
+
+    flashRead(FLASH_ADDR_UPDATE, (uint8_t *)p_tag, sizeof(firm_tag_t));
+
+
+    if (p_tag->magic_number != TAG_MAGIC_NUMBER)
+    {
+      err_code = ERR_BOOT_TAG_MAGIC;
+      break;
+    }
+
+    if (p_tag->fw_size >= FLASH_SIZE_FIRM)
+    {
+      err_code = ERR_BOOT_TAG_SIZE;
+      break;
+    }
+
+    addr   = FLASH_ADDR_UPDATE + p_tag->fw_addr;
+    length = p_tag->fw_size;
+    crc    = 0;
+
+    for (uint32_t i=0; i<length; i+=128)
+    {
+      rd_len = length-i;
+      if  (rd_len > 128)
+        rd_len = 128;
+
+      if (flashRead(addr + i, rd_buf, rd_len) != true)
+      {
+        err_code = ERR_BOOT_FLASH_READ;
+        break;
+      }
+
+      for (uint32_t j=0; j<rd_len; j++)
+      {
+        utilUpdateCrc(&crc, rd_buf[j]);
+      }
+    }
+
+    if (err_code == CMD_OK)
+    {
+      if (p_tag->fw_crc != crc)
+      {
+        err_code = ERR_BOOT_FW_CRC;
+      }
+    }
+  } while(0);
+
+  cmdSendResp(p_cmd, p_cmd->packet.cmd, err_code, NULL, 0);
+}
+
+bool cmdBootProcess(cmd_t *p_cmd)
+{
+  bool ret = true;
+
+
+  switch(p_cmd->packet.cmd)
+  {
+    case BOOT_CMD_INFO:
+      bootInfo(p_cmd);
+      break;
+
+    case BOOT_CMD_VERSION:
+      bootVersion(p_cmd);
+      break;
+
+    case BOOT_CMD_FW_VER:
+      bootFirmVersion(p_cmd);
+      break;
+
+    case BOOT_CMD_FW_ERASE:
+      bootFirmErase(p_cmd);
+      break;
+
+    case BOOT_CMD_FW_WRITE:
+      bootFirmWrite(p_cmd);
+      break;
+      
+    case BOOT_CMD_FW_READ:
+      bootFirmRead(p_cmd);
+      break;
+
+    case BOOT_CMD_FW_VERIFY:
+      bootFirmVerify(p_cmd);
+      break;
+
+#define BOOT_CMD_FW_UPDATE              0x000B
+#define BOOT_CMD_FW_JUMP                0x000C
+
+    default:
+      ret = false;
+      break;  
+  }
+
+  return ret;
+}
+
