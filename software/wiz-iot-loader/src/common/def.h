@@ -58,8 +58,9 @@
 typedef struct 
 {
   uint32_t magic_number;
-  char version_str[32];
-  char name_str[32];
+  char     version_str[32];
+  char     name_str[32];
+  uint32_t firm_addr;
 } firm_ver_t;
 
 typedef struct 
@@ -68,6 +69,8 @@ typedef struct
   uint32_t fw_addr;
   uint32_t fw_size;
   uint32_t fw_crc;
+
+  uint32_t tag_crc;
 } firm_tag_t;
 
 #endif /* SRC_COMMON_DEF_H_ */

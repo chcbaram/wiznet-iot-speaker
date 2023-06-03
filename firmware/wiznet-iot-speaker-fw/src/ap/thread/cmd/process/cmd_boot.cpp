@@ -97,10 +97,38 @@ static void bootFirmWrite(cmd_t *p_cmd)
 
   if ((addr+length) < FLASH_SIZE_FIRM)
   {    
-    if (flashWrite(FLASH_ADDR_UPDATE + addr, &p_packet->data[8], length) != true)
+    if (flashWrite(FLASH_ADDR_UPDATE + addr, &p_packet->data[8], length) == true)
+    {
+      uint32_t index = 0;
+      uint32_t rd_len;
+      uint8_t buf[32];
+
+      while(index < length)
+      {
+        rd_len = constrain(length - index, 0, 32);
+
+        flashRead(FLASH_ADDR_UPDATE + addr + index, buf, rd_len);
+        for (uint32_t i=0; i<rd_len; i++)
+        {
+          if (p_packet->data[8 + index + i] != buf[i])
+          {
+            err_code = ERR_BOOT_FLASH_WRITE;
+            break;
+          }
+        }
+        index += rd_len;
+
+        if (err_code != CMD_OK)
+        {
+          break;
+        }
+      }
+    }
+    else
     {
       err_code = ERR_BOOT_FLASH_WRITE;
     }
+    
   }
   else
   {
@@ -176,21 +204,26 @@ static void bootFirmVerify(cmd_t *p_cmd)
     length = p_tag->fw_size;
     crc    = 0;
 
-    for (uint32_t i=0; i<length; i+=128)
+    uint32_t index;
+
+    index = 0;
+    while (index < length)
     {
-      rd_len = length-i;
+      rd_len = length-index;
       if  (rd_len > 128)
         rd_len = 128;
 
-      if (flashRead(addr + i, rd_buf, rd_len) != true)
+      if (flashRead(addr + index, rd_buf, rd_len) != true)
       {
         err_code = ERR_BOOT_FLASH_READ;
         break;
       }
 
-      for (uint32_t j=0; j<rd_len; j++)
+      index += rd_len;
+
+      for (uint32_t i=0; i<rd_len; i++)
       {
-        utilUpdateCrc(&crc, rd_buf[j]);
+        utilUpdateCrc(&crc, rd_buf[i]);
       }
     }
 
@@ -204,6 +237,16 @@ static void bootFirmVerify(cmd_t *p_cmd)
   } while(0);
 
   cmdSendResp(p_cmd, p_cmd->packet.cmd, err_code, NULL, 0);
+}
+
+static void bootFirmUpdate(cmd_t *p_cmd)
+{
+  cmdSendResp(p_cmd, p_cmd->packet.cmd, CMD_OK, NULL, 0); 
+}
+
+static void bootFirmJump(cmd_t *p_cmd)
+{
+  cmdSendResp(p_cmd, p_cmd->packet.cmd, CMD_OK, NULL, 0); 
 }
 
 bool cmdBootProcess(cmd_t *p_cmd)
@@ -241,8 +284,13 @@ bool cmdBootProcess(cmd_t *p_cmd)
       bootFirmVerify(p_cmd);
       break;
 
-#define BOOT_CMD_FW_UPDATE              0x000B
-#define BOOT_CMD_FW_JUMP                0x000C
+    case BOOT_CMD_FW_UPDATE:
+      bootFirmUpdate(p_cmd);
+      break;
+
+    case BOOT_CMD_FW_JUMP:
+      bootFirmJump(p_cmd);
+      break;
 
     default:
       ret = false;

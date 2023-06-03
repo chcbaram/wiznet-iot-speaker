@@ -303,6 +303,7 @@ void apDownMode(void)
   }
   logPrintf("firm ver   : %s\n", firm_ver.version_str);    
   logPrintf("firm name  : %s\n", firm_ver.name_str);  
+  logPrintf("firm addr  : 0x%X\n", firm_ver.firm_addr);
 
 
   FILE *fp;
@@ -456,11 +457,18 @@ void apDownMode(void)
         logPrintf("tag  verify: OK, %dms\n", millis()-pre_time);
       }
 
-      // if (arg_option.run_fw == true)
-      // {
-      //   err_code = bootCmdJumpToFw();
-      //   logPrintf("jump to fw : OK\n");        
-      // }
+      pre_time = millis();
+      err_code = bootCmdFirmUpdate(5000);
+      if (err_code == CMD_OK)
+      {
+        logPrintf("firm update: OK, %dms\n", millis()-pre_time);
+      }
+      else
+      {
+        logPrintf("firm update: Fail\n");
+        logPrintf("      err  : 0x%04X\n", err_code);        
+        break;
+      }
     }
 
     break;

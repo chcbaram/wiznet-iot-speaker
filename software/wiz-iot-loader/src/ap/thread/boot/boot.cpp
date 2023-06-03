@@ -248,3 +248,27 @@ uint16_t bootCmdFirmVerify(uint32_t timeout)
 
   return ret;  
 }
+
+uint16_t bootCmdFirmUpdate(uint32_t timeout)
+{
+  uint16_t ret = CMD_OK;
+  cmd_t *p_cmd = &cmd_boot;
+
+
+  cmdSendCmdRxResp(p_cmd, BOOT_CMD_FW_UPDATE, NULL, 0, timeout);
+  ret = p_cmd->packet.err_code;
+
+  return ret;  
+}
+
+uint16_t bootCmdFirmJump(uint32_t timeout)
+{
+  uint16_t ret = CMD_OK;
+  cmd_t *p_cmd = &cmd_boot;
+
+
+  cmdSendCmdRxResp(p_cmd, BOOT_CMD_FW_JUMP, NULL, 0, timeout);
+  ret = p_cmd->packet.err_code;
+
+  return ret;  
+}

@@ -174,6 +174,7 @@ void cliCmd(cli_args_t *args)
     uint32_t tx_cnt = 0;
     uint32_t sent_len = 0;
 
+    pre_time = millis();
     while(cliKeepLoop())
     {
       if (millis()-pre_time >= 1000)
@@ -196,6 +197,7 @@ void cliCmd(cli_args_t *args)
     uint32_t rx_cnt = 0;
     uint32_t rx_len;
 
+    pre_time = millis();
     while(cliKeepLoop())
     {
       if (millis()-pre_time >= 1000)

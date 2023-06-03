@@ -36,5 +36,7 @@ uint16_t bootCmdFirmErase(uint32_t addr, uint32_t length, uint32_t timeout);
 uint16_t bootCmdFirmWrite(uint32_t addr, uint8_t *p_data, uint32_t length, uint32_t timeout);
 uint16_t bootCmdFirmRead(uint32_t addr, uint8_t *p_data, uint32_t length, uint32_t timeout);
 uint16_t bootCmdFirmVerify(uint32_t timeout);
+uint16_t bootCmdFirmUpdate(uint32_t timeout);
+uint16_t bootCmdFirmJump(uint32_t timeout);
 
 #endif
