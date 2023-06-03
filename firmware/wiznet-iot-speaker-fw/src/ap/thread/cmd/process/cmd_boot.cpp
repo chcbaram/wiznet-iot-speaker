@@ -242,6 +242,10 @@ static void bootFirmVerify(cmd_t *p_cmd)
 static void bootFirmUpdate(cmd_t *p_cmd)
 {
   cmdSendResp(p_cmd, p_cmd->packet.cmd, CMD_OK, NULL, 0); 
+  delay(100);
+
+  resetSetBootMode(1<<MODE_BIT_UPDATE);
+  resetToReset();
 }
 
 static void bootFirmJump(cmd_t *p_cmd)
