@@ -31,10 +31,23 @@ static void bootInfo(cmd_t *p_cmd)
 
 static void bootVersion(cmd_t *p_cmd)
 {
-  strcpy(boot_version.boot.name_str, "Empty");
+  firm_ver_t *p_boot = (firm_ver_t *)(FLASH_ADDR_BOOT + FLASH_SIZE_VER);
+  firm_ver_t *p_firm = (firm_ver_t *)(FLASH_ADDR_FIRM + FLASH_SIZE_TAG + FLASH_SIZE_VER);
+  firm_ver_t update;
 
-  strcpy(boot_version.firm.name_str, _DEF_BOARD_NAME);
-  strcpy(boot_version.firm.version_str, _DEF_FIRMWATRE_VERSION);
+  memset(&boot_version, 0, sizeof(boot_version));
+
+  if (p_boot->magic_number == VERSION_MAGIC_NUMBER) 
+    boot_version.boot = *p_boot;
+
+  if (p_firm->magic_number == VERSION_MAGIC_NUMBER) 
+    boot_version.firm = *p_firm;
+
+
+  flashRead(FLASH_ADDR_UPDATE + FLASH_SIZE_TAG + FLASH_SIZE_VER, (uint8_t *)&update, sizeof(firm_ver_t));
+
+  if (update.magic_number == VERSION_MAGIC_NUMBER)
+    boot_version.update = update;
 
   cmdSendResp(p_cmd, p_cmd->packet.cmd, CMD_OK, (uint8_t *)&boot_version, sizeof(boot_version_t));
 }

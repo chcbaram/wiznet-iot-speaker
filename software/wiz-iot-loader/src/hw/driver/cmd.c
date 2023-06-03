@@ -50,6 +50,8 @@ bool cmdOpen(cmd_t *p_cmd)
   if (p_driver->open(p_driver->args) == true)
   {
     p_cmd->is_open = true;
+
+    p_driver->flush(p_driver->args);
   }
   else
   {

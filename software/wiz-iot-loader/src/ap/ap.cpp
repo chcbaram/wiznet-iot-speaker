@@ -334,7 +334,12 @@ void apDownMode(void)
     //
     logPrintf("## Read Info \n");
     logPrintf("##\n");
-    err_code = bootCmdReadInfo(&boot_info);
+    for (int i=0; i<3; i++)
+    {
+      err_code = bootCmdReadInfo(&boot_info);
+      if (err_code == CMD_OK)
+        break;
+    }
     if (err_code == CMD_OK)
     {
       if (boot_info.mode == 0)
@@ -358,11 +363,9 @@ void apDownMode(void)
     if (err_code == CMD_OK)
     {
       logPrintf("boot   name: %s\n", boot_ver.boot.name_str);    
-      logPrintf("       ver   %s\n", boot_ver.boot.version_str);    
       logPrintf("firm   name: %s\n", boot_ver.firm.name_str); 
-      logPrintf("       ver   %s\n", boot_ver.firm.version_str); 
-      logPrintf("update name: %s\n", boot_ver.update.name_str);
-      logPrintf("       ver   %s\n", boot_ver.update.version_str);    
+      logPrintf("boot   ver : %s\n", boot_ver.boot.version_str);    
+      logPrintf("firm   ver : %s\n", boot_ver.firm.version_str); 
     }
     else
     {
