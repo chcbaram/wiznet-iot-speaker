@@ -139,7 +139,7 @@ bool apGetOption(int argc, char *argv[])
 
 void apShowHelp(void)
 {
-  logPrintf("ch32v30x_loader -p com1 -f fw.bin\n");
+  logPrintf("wiz-iot-loader -p com1 -f fw.bin\n");
   logPrintf("            -h : help\n");
   logPrintf("            -p com1  : com port\n");
   logPrintf("            -b 115200: baud\n");
