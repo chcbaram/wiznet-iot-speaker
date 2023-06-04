@@ -37,6 +37,8 @@ bool open(void *args)
 {
   cmd_uart_args_t *p_args = (cmd_uart_args_t *)args;
 
+  logPrintf("[OK] cmdUartOpen()\n");
+
   return uartOpen(p_args->ch, p_args->baud);
 }
 

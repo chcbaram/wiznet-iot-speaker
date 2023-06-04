@@ -38,7 +38,11 @@ target_include_directories(${EXECUTABLE} PRIVATE
   src/common
   src/common/core
   src/common/hw/include
+
+  src/lib/ez_socket/include
   )
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
 # Compiler options
 target_compile_options(${EXECUTABLE} PRIVATE
@@ -55,4 +59,6 @@ target_compile_options(${EXECUTABLE} PRIVATE
 target_link_options(${EXECUTABLE} PRIVATE
   
   -lm
+  -lpthread
+
   )

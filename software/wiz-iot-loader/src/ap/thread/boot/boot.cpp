@@ -1,5 +1,6 @@
 #include "boot.h"
 #include "driver/cmd_uart.h"
+#include "driver/cmd_udp.h"
 
 
 
@@ -46,22 +47,34 @@ bool bootInit(uint8_t ch, char *port_name, uint32_t baud)
   return ret;
 }
 
-bool bootDeInit(uint8_t ch)
+bool bootInitUdp(char *ip_addr, uint32_t port)
 {
   bool ret;
 
-  ret = uartClose(ch);
+  cmdUdpInitDriver(&cmd_driver, ip_addr, port);
+  cmdInit(&cmd_boot, &cmd_driver);
+
+  ret = cmdOpen(&cmd_boot);
 
   return ret;
 }
 
-uint16_t bootCmdReadInfo(boot_info_t *p_info)
+bool bootDeInit(void)
+{
+  bool ret;
+
+  ret = cmdClose(&cmd_boot);
+
+  return ret;
+}
+
+uint16_t bootCmdReadInfo(boot_info_t *p_info, uint32_t timeout)
 {
   uint16_t ret = CMD_OK;
   cmd_t *p_cmd = &cmd_boot;
 
 
-  if (cmdSendCmdRxResp(p_cmd, BOOT_CMD_INFO, NULL, 0, 100) == true)
+  if (cmdSendCmdRxResp(p_cmd, BOOT_CMD_INFO, NULL, 0, timeout) == true)
   {
     cmd_packet_t *p_packet = &p_cmd->packet;
 
@@ -85,13 +98,13 @@ uint16_t bootCmdReadInfo(boot_info_t *p_info)
 }
 
 
-uint16_t bootCmdReadVersion(boot_version_t *version)
+uint16_t bootCmdReadVersion(boot_version_t *version, uint32_t timeout)
 {
   uint16_t ret = CMD_OK;
   cmd_t *p_cmd = &cmd_boot;
 
 
-  if (cmdSendCmdRxResp(p_cmd, BOOT_CMD_VERSION, NULL, 0, 100) == true)
+  if (cmdSendCmdRxResp(p_cmd, BOOT_CMD_VERSION, NULL, 0, timeout) == true)
   {
     cmd_packet_t *p_packet = &p_cmd->packet;
 
@@ -115,13 +128,13 @@ uint16_t bootCmdReadVersion(boot_version_t *version)
 }
 
 
-uint16_t bootCmdFirmVersion(firm_ver_t *version)
+uint16_t bootCmdFirmVersion(firm_ver_t *version, uint32_t timeout)
 {
   uint16_t ret = CMD_OK;
   cmd_t *p_cmd = &cmd_boot;
 
 
-  if (cmdSendCmdRxResp(p_cmd, BOOT_CMD_FW_VER, NULL, 0, 100) == true)
+  if (cmdSendCmdRxResp(p_cmd, BOOT_CMD_FW_VER, NULL, 0, timeout) == true)
   {
     cmd_packet_t *p_packet = &p_cmd->packet;
 
@@ -192,7 +205,15 @@ uint16_t bootCmdFirmWrite(uint32_t addr, uint8_t *p_data, uint32_t length, uint3
     tx_buf[8+i] = p_data[i];  
   }
 
-  cmdSendCmdRxResp(p_cmd, BOOT_CMD_FW_WRITE, tx_buf, 8+length, timeout);
+  for (int i=0; i<3; i++)
+  {
+    cmdSendCmdRxResp(p_cmd, BOOT_CMD_FW_WRITE, tx_buf, 8+length, timeout);
+    if (p_cmd->packet.err_code == CMD_OK)
+    {
+      break;
+    }
+    delay(10);
+  }
 
   ret = p_cmd->packet.err_code;
 

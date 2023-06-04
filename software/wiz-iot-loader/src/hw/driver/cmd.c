@@ -61,7 +61,7 @@ bool cmdOpen(cmd_t *p_cmd)
   p_cmd->state = CMD_STATE_WAIT_STX0;
   p_cmd->pre_time = millis();
 
-  return true;
+  return p_cmd->is_open;
 }
 
 bool cmdClose(cmd_t *p_cmd)
@@ -241,6 +241,7 @@ bool cmdSend(cmd_t *p_cmd, CmdType_t type, uint16_t cmd, uint16_t err_code, uint
   check_sum = (~check_sum) + 1;
   p_cmd->packet.buffer[index++] = check_sum;
 
+  p_driver->flush(p_driver->args);
   wr_len = p_driver->write(p_driver->args, p_cmd->packet.buffer, index);
 
   if (wr_len == index)

@@ -4,9 +4,6 @@
 
 
 
-#define SWAP16(x)   (uint16_t)(((uint16_t)x<<8) | ((uint16_t)x>>8))
-
-
 #ifdef _USE_HW_CLI
 static void cliCmd(cli_args_t *args);
 #endif
@@ -251,19 +248,20 @@ void cliCmd(cli_args_t *args)
     W5300_REGS->SOCKET[0].CR.d16    = SWAP16(0x01);
 
     rx_length = 0;
+    pre_time = millis();
     while(cliKeepLoop())
     {
       if (millis()-pre_time >= 1000)
       {
         pre_time = millis();
-        cliPrintf("SSR 0x%02X, %X, %X, RSR : 0x%08X, %d KB/s %d MBps/s\n", 
-          W5300_REGS->SOCKET[0].SSR.d8[1], 
-          W5300_REGS->IR.d16,
-          W5300_REGS->SOCKET[0].IR.d8[1],
-          W5300_REGS->SOCKET[0].RX_RSR.d32,
-          rx_length/1024,
-          rx_length*8/1000000
-          );
+        // cliPrintf("SSR 0x%02X, %X, %X, RSR : 0x%08X, %d KB/s %d MBps/s\n", 
+        //   W5300_REGS->SOCKET[0].SSR.d8[1], 
+        //   W5300_REGS->IR.d16,
+        //   W5300_REGS->SOCKET[0].IR.d8[1],
+        //   W5300_REGS->SOCKET[0].RX_RSR.d32,
+        //   rx_length/1024,
+        //   rx_length*8/1000000
+        //   );
         rx_length = 0;
       }
 
@@ -279,15 +277,15 @@ void cliCmd(cli_args_t *args)
         (void)reg_size;
         (void)reg_data;
 
-        // cliPrintf("RSR : 0x%08X\n", W5300_REGS->SOCKET[0].RX_RSR.d32);
+        cliPrintf("RSR : 0x%08X\n", W5300_REGS->SOCKET[0].RX_RSR.d32);
 
         reg_ip.d16[0] = W5300_REGS->SOCKET[0].RX_FIFOR.d16;
         reg_ip.d16[1] = W5300_REGS->SOCKET[0].RX_FIFOR.d16;
-        // for (int i=0; i<4; i++)
-        // {
-        //   cliPrintf("%d.", reg_ip.d8[i]);
-        // }
-        // cliPrintf("\n");
+        for (int i=0; i<4; i++)
+        {
+          cliPrintf("%d.", reg_ip.d8[i]);
+        }
+        cliPrintf("\n");
 
         uint16_t reg[2];
 
@@ -296,8 +294,8 @@ void cliCmd(cli_args_t *args)
         reg_port.d16 = SWAP16(reg[0]);
         reg_size.d16 = SWAP16(reg[1]);
 
-        // cliPrintf("port : %X\n", reg_port.d16);
-        // cliPrintf("size : %X\n", reg_size.d16);
+        cliPrintf("port : %X\n", reg_port.d16);
+        cliPrintf("size : %X\n", reg_size.d16);
 
         rx_length += reg_size.d16;
 
@@ -309,13 +307,13 @@ void cliCmd(cli_args_t *args)
         for (int i=0; i<reg_size.d16; i++)
         {
           reg_data.d16 = W5300_REGS->SOCKET[0].RX_FIFOR.d16;
-          // cliPrintf("0x%02X\n", reg_data.d8[0]);
-          // cliPrintf("0x%02X\n", reg_data.d8[1]);
+          cliPrintf("0x%02X\n", reg_data.d8[0]);
+          cliPrintf("0x%02X\n", reg_data.d8[1]);
         }
 
         // cliPrintf("RSR : 0x%08X\n", W5300_REGS->SOCKET[0].RX_RSR.d32);
 
-        W5300_REGS->SOCKET[0].IR = W5300_REGS->SOCKET[0].IR;
+        W5300_REGS->SOCKET[0].IR.d16 = W5300_REGS->SOCKET[0].IR.d16;
         W5300_REGS->SOCKET[0].CR.d16 = SWAP16(0x40);  
       }
 

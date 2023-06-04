@@ -1,5 +1,6 @@
 #include "cmd_thread.h"
 #include "driver/cmd_uart.h"
+#include "driver/cmd_udp.h"
 #include "process/cmd_boot.h"
 
 
@@ -15,10 +16,14 @@ static cmd_driver_t cmd_drvier[CMD_DRIVER_MAX_CH];
 
 bool cmdThreadInit(void)
 {
-  cmdUartInitDriver(&cmd_drvier[0], HW_UART_CH_USB, 1000000);
-
+  cmdUartInitDriver(&cmd_drvier[0], HW_UART_CH_USB, 1000000);  
   cmdInit(&cmd[0], &cmd_drvier[0]);
   cmdOpen(&cmd[0]);
+
+  cmdUdpInitDriver(&cmd_drvier[1], NULL, 5000);  
+  cmdInit(&cmd[1], &cmd_drvier[1]);
+  cmdOpen(&cmd[1]);
+
   return true;
 }
 

@@ -25,13 +25,14 @@ typedef struct
 
 
 bool bootInit(uint8_t ch, char *port_name, uint32_t baud);
-bool bootDeInit(uint8_t ch);
+bool bootInitUdp(char *ip_addr, uint32_t port);
+bool bootDeInit(void);
 
 
-uint16_t bootCmdReadInfo(boot_info_t *info);
-uint16_t bootCmdReadVersion(boot_version_t *version);
+uint16_t bootCmdReadInfo(boot_info_t *info, uint32_t timeout);
+uint16_t bootCmdReadVersion(boot_version_t *version, uint32_t timeout);
 
-uint16_t bootCmdFirmVersion(firm_ver_t *version);
+uint16_t bootCmdFirmVersion(firm_ver_t *version, uint32_t timeout);
 uint16_t bootCmdFirmErase(uint32_t addr, uint32_t length, uint32_t timeout);
 uint16_t bootCmdFirmWrite(uint32_t addr, uint8_t *p_data, uint32_t length, uint32_t timeout);
 uint16_t bootCmdFirmRead(uint32_t addr, uint8_t *p_data, uint32_t length, uint32_t timeout);

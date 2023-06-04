@@ -29,12 +29,14 @@ enum
 typedef struct
 {
   uint8_t mode;
-
+  bool    is_udp;
   uint32_t arg_bits;
   char     port_str[128];
   uint32_t port_baud;
   char     file_str[128];
   bool     run_fw;
+
+  uint32_t tx_block_len;
 } arg_option_t;
 
 
@@ -58,11 +60,13 @@ void apInit(void)
   logPrintf("WIZ-IOT-LOADER V230603R1\n\n");
 
   arg_option.mode = MODE_DOWN;
+  arg_option.is_udp = false;
 }
 
 void apMain(int argc, char *argv[])
 {
   bool ret;
+
 
   ret = apGetOption(argc, argv);
   if (ret != true)
@@ -80,17 +84,31 @@ bool apGetOption(int argc, char *argv[])
 {
   int opt;
   bool ret = true;
-  
+  int argc_i = 0;
 
   arg_option.run_fw      = true;
   arg_option.arg_bits    = 0;
   arg_option.port_baud   = 19200;
+  arg_option.tx_block_len = 256;
 
 
-  while((opt = getopt(argc, argv, "hcp:b:f:a:rv:l")) != -1)
+  while((opt = getopt(argc, argv, "m:hcp:b:f:a:rv:l")) != -1)
   {
     switch(opt)
     {
+      case 'm':
+        if (strncmp(argv[optind-1], "udp", 3) == 0)
+        {
+          arg_option.is_udp = true;
+          arg_option.tx_block_len = 1024;
+          logPrintf("-m udp\n");
+        }
+        else
+        {
+          logPrintf("-m uart\n");
+        }
+        break;
+
       case 'h':
         apShowHelp();
         ret = false;
@@ -127,6 +145,8 @@ bool apGetOption(int argc, char *argv[])
         logPrintf("Unknown\n");
         break;
     }
+
+    argc_i++;
   }
 
   if (argc == 1)
@@ -139,7 +159,7 @@ bool apGetOption(int argc, char *argv[])
 
 void apShowHelp(void)
 {
-  logPrintf("wiz-iot-loader -p com1 -f fw.bin\n");
+  logPrintf("wiz-iot-loader [udp] -p com1 -f fw.bin\n");
   logPrintf("            -h : help\n");
   logPrintf("            -p com1  : com port\n");
   logPrintf("            -b 115200: baud\n");
@@ -315,7 +335,10 @@ void apDownMode(void)
   }
 
 
-  ret = bootInit(_USE_UART_CMD, arg_option.port_str, baud);
+  if (arg_option.is_udp == true)
+    ret = bootInitUdp(arg_option.port_str, 5000);
+  else
+    ret = bootInit(_USE_UART_CMD, arg_option.port_str, baud);
   if (ret != true)
   {
     logPrintf("bootInit() Fail\n");
@@ -336,7 +359,7 @@ void apDownMode(void)
     logPrintf("##\n");
     for (int i=0; i<3; i++)
     {
-      err_code = bootCmdReadInfo(&boot_info);
+      err_code = bootCmdReadInfo(&boot_info, 500);
       if (err_code == CMD_OK)
         break;
     }
@@ -359,7 +382,8 @@ void apDownMode(void)
     //
     logPrintf("## Read Version \n");
     logPrintf("##\n");
-    err_code = bootCmdReadVersion(&boot_ver);
+    pre_time = millis();
+    err_code = bootCmdReadVersion(&boot_ver, 500);
     if (err_code == CMD_OK)
     {
       logPrintf("boot   name: %s\n", boot_ver.boot.name_str);    
@@ -372,7 +396,7 @@ void apDownMode(void)
       logPrintf("bootCmdReadVersion() : fail 0x%04X\n", err_code);   
       break; 
     }
-    logPrintf("\n");
+    logPrintf("OK %d ms\n\n", millis()-pre_time);
 
 
     addr = 0;
@@ -393,8 +417,8 @@ void apDownMode(void)
 
     // 2. Flash Write
     //
-    uint32_t tx_block_size = 256;
-    uint8_t  tx_buf[256];
+    uint32_t tx_block_size = arg_option.tx_block_len;
+    uint8_t  tx_buf[arg_option.tx_block_len];
     uint32_t tx_len;
     int32_t  len_to_send;
     bool write_done = false;
@@ -486,6 +510,9 @@ void apDownMode(void)
 
 void apExit(void)
 {
+  printf("\n");
+  bootDeInit();
+
   for (int i=0; i<UART_MAX_CH; i++)
   {
     uartClose(i);

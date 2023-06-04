@@ -45,7 +45,7 @@ typedef struct cmd_driver_t_ cmd_driver_t;
 
 typedef struct cmd_driver_t_
 {
-  uint32_t  args[4];
+  uint32_t  args[32];
 
   bool     (*open)(void *args);
   bool     (*close)(void *args);  

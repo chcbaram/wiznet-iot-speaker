@@ -16,6 +16,8 @@ extern "C" {
 #define W5300_REGS       ((W5300_REGS_t *)(HW_W5300_BASE_ADDR + 0x000))
 
 
+#define SWAP16(x)   (uint16_t)(((uint16_t)(x)<<8) | ((uint16_t)(x)>>8))
+
 
 
 bool w5300Init(void);
