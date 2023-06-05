@@ -161,6 +161,7 @@ void apShowHelp(void)
 {
   logPrintf("wiz-iot-loader [udp] -p com1 -f fw.bin\n");
   logPrintf("            -h : help\n");
+  logPrintf("            -m udp   : udp \n");
   logPrintf("            -p com1  : com port\n");
   logPrintf("            -b 115200: baud\n");
   logPrintf("            -f fw.bin: firmware\n");
