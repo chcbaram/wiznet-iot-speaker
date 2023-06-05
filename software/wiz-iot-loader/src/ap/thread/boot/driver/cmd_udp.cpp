@@ -98,7 +98,7 @@ bool open(void *args)
   });
 
 
-  socketSetRemoteIP(&ez_udp, (const char *)"172.30.1.55", p_args->port);
+  socketSetRemoteIP(&ez_udp, (const char *)p_args->ip_addr, p_args->port);
 
   return ret;
 }
