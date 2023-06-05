@@ -57,7 +57,7 @@ uint32_t getFileCrc(char *file_name);
 
 void apInit(void)
 {
-  logPrintf("WIZ-IOT-LOADER V230603R1\n\n");
+  logPrintf("WIZ-IOT-LOADER V230606R1\n\n");
 
   arg_option.mode = MODE_DOWN;
   arg_option.is_udp = false;
@@ -278,6 +278,7 @@ void apDownMode(void)
 
   boot_info_t boot_info;
   boot_version_t boot_ver;
+  boot_begin_t boot_begin;
 
   firm_ver_t firm_ver;
   firm_tag_t firm_tag;
@@ -326,6 +327,10 @@ void apDownMode(void)
   logPrintf("firm name  : %s\n", firm_ver.name_str);  
   logPrintf("firm addr  : 0x%X\n", firm_ver.firm_addr);
 
+
+
+  strncpy(boot_begin.fw_name, file_name, 64);
+  boot_begin.fw_size = file_len;
 
   FILE *fp;
 
@@ -377,6 +382,20 @@ void apDownMode(void)
       break;
     }
     logPrintf("\n");
+
+
+    // Begin
+    //
+    logPrintf("## Begin \n");
+    logPrintf("##\n");
+    pre_time = millis();
+    err_code = bootCmdFirmBegin(&boot_begin, 500);
+    if (err_code != CMD_OK)
+    {
+      logPrintf("bootCmdFirmBegin() : fail 0x%04X\n", err_code);   
+      break; 
+    }
+    logPrintf("OK %d ms\n\n", millis()-pre_time);
 
 
     // Read Version
@@ -485,6 +504,8 @@ void apDownMode(void)
         logPrintf("tag  verify: OK, %dms\n", millis()-pre_time);
       }
 
+      err_code = bootCmdFirmEnd(500);
+
       pre_time = millis();
       err_code = bootCmdFirmUpdate(5000);
       if (err_code == CMD_OK)
@@ -497,6 +518,10 @@ void apDownMode(void)
         logPrintf("      err  : 0x%04X\n", err_code);        
         break;
       }
+    }
+    else
+    {
+      err_code = bootCmdFirmEnd(500);
     }
 
     break;

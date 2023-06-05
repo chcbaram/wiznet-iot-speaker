@@ -15,10 +15,39 @@
 #define BOOT_CMD_FW_VERIFY              0x000A
 #define BOOT_CMD_FW_UPDATE              0x000B
 #define BOOT_CMD_FW_JUMP                0x000C
+#define BOOT_CMD_FW_BEGIN               0x000D
+#define BOOT_CMD_FW_END                 0x000E
+
+
+typedef struct
+{
+  uint32_t mode;
+} boot_info_t;
+
+
+typedef struct
+{
+  firm_ver_t boot;
+  firm_ver_t firm;
+  firm_ver_t update;
+} boot_version_t;
+
+
+typedef struct
+{
+  char     fw_name[64];
+  uint32_t fw_size;
+} boot_begin_t;
 
 
 static boot_info_t    boot_info;
 static boot_version_t boot_version;
+static boot_begin_t   boot_begin;
+
+static bool is_begin = false;
+static uint32_t fw_receive_size = 0;
+
+
 
 
 
@@ -115,6 +144,9 @@ static void bootFirmWrite(cmd_t *p_cmd)
       uint32_t index = 0;
       uint32_t rd_len;
       uint8_t buf[32];
+
+      if (is_begin && fw_receive_size <= addr)
+        fw_receive_size = addr + length;
 
       while(index < length)
       {
@@ -266,6 +298,98 @@ static void bootFirmJump(cmd_t *p_cmd)
   cmdSendResp(p_cmd, p_cmd->packet.cmd, CMD_OK, NULL, 0); 
 }
 
+static void bootFirmBegin(cmd_t *p_cmd)
+{
+  cmd_packet_t *p_packet = &p_cmd->packet;
+  uint16_t err_code = CMD_OK;
+
+
+  fw_receive_size = 0;
+
+  if (p_packet->length == sizeof(boot_begin_t))
+  {
+    memcpy(&boot_begin, p_packet->data, sizeof(boot_begin_t));
+    is_begin = true;
+  } 
+  else
+  {
+    err_code = ERR_BOOT_WRONG_RANGE;
+  }
+
+  cmdSendResp(p_cmd, p_cmd->packet.cmd, err_code, NULL, 0);
+}
+
+static void bootFirmEnd(cmd_t *p_cmd)
+{
+  uint16_t err_code = CMD_OK;
+
+  is_begin = false;
+
+  cmdSendResp(p_cmd, p_cmd->packet.cmd, err_code, NULL, 0);
+}
+
+static void cmdBootUpdate(cmd_t *p_cmd)
+{
+  enum 
+  {
+    STATE_IDLE,
+    STATE_BEGIN,
+    STATE_END,
+  };
+  static uint8_t state = STATE_IDLE;
+
+
+  switch(state)
+  {
+    case STATE_IDLE:
+      if (is_begin == true)
+      {
+        state = STATE_BEGIN;
+      }
+      break;
+
+    case STATE_BEGIN:
+      if (is_begin == false)
+      {
+        state = STATE_END;
+      }
+      break;
+
+    case STATE_END:
+      state = STATE_IDLE;
+      break;
+  }
+
+
+  if (state == STATE_BEGIN)
+  {
+    if (lcdDrawAvailable())
+    {
+      lcdClearBuffer(black);
+
+      lcdDrawFillRect(0, 32, LCD_WIDTH, 32, white);     
+      lcdPrintfRect  (0, 32, LCD_WIDTH, 32, black, 32, LCD_ALIGN_H_CENTER|LCD_ALIGN_V_CENTER, 
+        "F/W UPDATE");
+
+
+
+      int percent;
+      percent = fw_receive_size * 100 / boot_begin.fw_size;
+
+      lcdPrintfResize(0, 16*6 , white, 32, "%d KB", boot_begin.fw_size/1024);
+      if (p_cmd->packet.cmd == BOOT_CMD_FW_BEGIN)
+        lcdPrintfResize(0, 16*8 , red, 32, "ERASE...");  
+      else
+        lcdPrintfResize(0, 16*8 , white, 32, "%d %%", fw_receive_size * 100 / boot_begin.fw_size);
+      lcdDrawRect    (0, 16*11, LCD_WIDTH, 32, white);
+      lcdDrawFillRect(0, 16*11, LCD_WIDTH * percent / 100, 32, green);     
+
+
+      lcdRequestDraw();
+    }
+  }
+}
+
 bool cmdBootProcess(cmd_t *p_cmd)
 {
   bool ret = true;
@@ -309,10 +433,20 @@ bool cmdBootProcess(cmd_t *p_cmd)
       bootFirmJump(p_cmd);
       break;
 
+    case BOOT_CMD_FW_BEGIN:
+      bootFirmBegin(p_cmd);
+      break;
+
+    case BOOT_CMD_FW_END:
+      bootFirmEnd(p_cmd);
+      break;
+
     default:
       ret = false;
       break;  
   }
+
+  cmdBootUpdate(p_cmd);
 
   return ret;
 }

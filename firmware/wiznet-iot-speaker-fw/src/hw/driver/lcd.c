@@ -943,55 +943,33 @@ void disHanFontBuffer(int x, int y, han_font_t *FontPtr, uint16_t textcolor)
   }
 }
 
-LCD_OPT_DEF uint16_t lcdGetColorMix(uint16_t c1_, uint16_t c2_, uint8_t mix)
+LCD_OPT_DEF uint16_t lcdGetColorMix(uint16_t c1, uint16_t c2, uint8_t mix)
 {
   uint16_t r, g, b;
   uint16_t ret;
-  uint16_t c1;
-  uint16_t c2;
 
-#if 0
-  c1 = ((c1_>>8) & 0x00FF) | ((c1_<<8) & 0xFF00);
-  c2 = ((c2_>>8) & 0x00FF) | ((c2_<<8) & 0xFF00);
-#else
-  c1 = c1_;
-  c2 = c2_;
-#endif
+
   r = ((uint16_t)((uint16_t) GETR(c1) * mix + GETR(c2) * (255 - mix)) >> 8);
   g = ((uint16_t)((uint16_t) GETG(c1) * mix + GETG(c2) * (255 - mix)) >> 8);
   b = ((uint16_t)((uint16_t) GETB(c1) * mix + GETB(c2) * (255 - mix)) >> 8);
 
   ret = MAKECOL(r, g, b);
 
-
-
-  //return ((ret>>8) & 0xFF) | ((ret<<8) & 0xFF00);;
   return ret;
 }
 
 LCD_OPT_DEF void lcdDrawPixelMix(int16_t x_pos, int16_t y_pos, uint32_t rgb_code, uint8_t mix)
 {
   uint16_t color1, color2;
-  uint16_t buf_data;
-  uint16_t rgb_out;
 
   if (x_pos < 0 || x_pos >= LCD_WIDTH) return;
   if (y_pos < 0 || y_pos >= LCD_HEIGHT) return;
 
-  
-  buf_data = p_draw_frame_buf[y_pos * LCD_WIDTH + x_pos];
 
-  rgb_out  = (buf_data>>8) & 0x00FF;
-  rgb_out |= (buf_data<<8) & 0xFF00;
-
-  color1 = rgb_out;
+  color1 = p_draw_frame_buf[y_pos * LCD_WIDTH + x_pos];
   color2 = rgb_code;
 
-  buf_data = lcdGetColorMix(color1, color2, 255-mix);
-  rgb_out  = (buf_data>>8) & 0x00FF;
-  rgb_out |= (buf_data<<8) & 0xFF00;
-
-  p_draw_frame_buf[y_pos * LCD_WIDTH + x_pos] = rgb_out;
+  p_draw_frame_buf[y_pos * LCD_WIDTH + x_pos] = lcdGetColorMix(color1, color2, 255-mix);
 }
 
 void lcdPrintfResize(int x, int y, uint16_t color,  float ratio_h, const char *fmt, ...)
@@ -1102,7 +1080,7 @@ void lcdPrintfResize(int x, int y, uint16_t color,  float ratio_h, const char *f
   }
 }
 
-void lcdPrintfRect(int x, int y, int w, int h, uint16_t color, float ratio, uint16_t align, const char *fmt, ...)
+void lcdPrintfRect(int x, int y, int w, int h, uint16_t color, float ratio_h, uint16_t align, const char *fmt, ...)
 {
   va_list arg;
   va_start (arg, fmt);
@@ -1119,6 +1097,7 @@ void lcdPrintfRect(int x, int y, int w, int h, uint16_t color, float ratio, uint
   int16_t x_pos;
   int16_t y_pos;
   uint32_t str_width;
+  float ratio;
 
   r_src.x = 0;
   r_src.y = 0;
@@ -1132,6 +1111,12 @@ void lcdPrintfRect(int x, int y, int w, int h, uint16_t color, float ratio, uint
   len = vsnprintf(print_buffer, 255, fmt, arg);
   va_end (arg);
   
+  if (ratio_h > LCD_FONT_RESIZE_WIDTH)
+  {
+    ratio_h = LCD_FONT_RESIZE_WIDTH;
+  }
+  ratio = ratio_h / 16;
+
 
   str_width = lcdGetStrWidth(fmt) * ratio;
 
@@ -1191,7 +1176,6 @@ void lcdPrintfRect(int x, int y, int w, int h, uint16_t color, float ratio, uint
 
     int x_o = 0;
     int y_o = 0;
-
 
     if (w > str_width)
     {
@@ -1402,6 +1386,9 @@ void cliLcd(cli_args_t *args)
 
         exe_time = millis()-pre_time;
         lcdPrintf(0, 120, red, "draw %d ms", exe_time);
+
+        lcdPrintfRect(0, 0, LCD_WIDTH, 32, white, 32, LCD_ALIGN_H_CENTER|LCD_ALIGN_V_CENTER, 
+          "UPDATE");
 
         lcdRequestDraw();
       }

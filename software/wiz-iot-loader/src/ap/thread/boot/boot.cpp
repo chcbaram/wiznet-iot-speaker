@@ -18,7 +18,8 @@
 #define BOOT_CMD_FW_VERIFY              0x000A
 #define BOOT_CMD_FW_UPDATE              0x000B
 #define BOOT_CMD_FW_JUMP                0x000C
-
+#define BOOT_CMD_FW_BEGIN               0x000D
+#define BOOT_CMD_FW_END                 0x000E
 
 
 
@@ -127,6 +128,36 @@ uint16_t bootCmdReadVersion(boot_version_t *version, uint32_t timeout)
   return ret;
 }
 
+uint16_t bootCmdFirmBegin(boot_begin_t *begin, uint32_t timeout)
+{
+  uint16_t ret = CMD_OK;
+  cmd_t *p_cmd = &cmd_boot;
+
+
+  memcpy(p_cmd->packet.data, begin, sizeof(boot_begin_t));
+
+  for (int i=0; i<3; i++)
+  {
+    cmdSendCmdRxResp(p_cmd, BOOT_CMD_FW_BEGIN, p_cmd->packet.data, sizeof(boot_begin_t), timeout);
+    if (p_cmd->packet.err_code == CMD_OK)
+      break;
+  }
+  ret = p_cmd->packet.err_code;
+
+  return ret;
+}
+
+uint16_t bootCmdFirmEnd(uint32_t timeout)
+{
+  uint16_t ret = CMD_OK;
+  cmd_t *p_cmd = &cmd_boot;
+
+
+  cmdSendCmdRxResp(p_cmd, BOOT_CMD_FW_END, NULL, 0, timeout);
+  ret = p_cmd->packet.err_code;
+
+  return ret;
+}
 
 uint16_t bootCmdFirmVersion(firm_ver_t *version, uint32_t timeout)
 {

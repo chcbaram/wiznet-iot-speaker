@@ -217,6 +217,7 @@ uint32_t write(void *args, uint8_t *p_data, uint32_t length)
     W5300_REGS->SOCKET[socket_id].TX_WRSR.d16[0] = SWAP16((length>>16) & 0xFFFF);
     W5300_REGS->SOCKET[socket_id].TX_WRSR.d16[1] = SWAP16((length>> 0) & 0xFFFF);
     W5300_REGS->SOCKET[socket_id].CR.d16 = SWAP16(0x20);
+    delay(1);
   }
 
   return ret;
