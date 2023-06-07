@@ -16,10 +16,39 @@
 #define BOOT_CMD_FW_VERIFY              0x000A
 #define BOOT_CMD_FW_UPDATE              0x000B
 #define BOOT_CMD_FW_JUMP                0x000C
+#define BOOT_CMD_FW_BEGIN               0x000D
+#define BOOT_CMD_FW_END                 0x000E
+
+
+typedef struct
+{
+  uint32_t mode;
+} boot_info_t;
+
+
+typedef struct
+{
+  firm_ver_t boot;
+  firm_ver_t firm;
+  firm_ver_t update;
+} boot_version_t;
+
+
+typedef struct
+{
+  char     fw_name[64];
+  uint32_t fw_size;
+} boot_begin_t;
 
 
 static boot_info_t    boot_info;
 static boot_version_t boot_version;
+static boot_begin_t   boot_begin;
+
+static bool is_begin = false;
+static uint32_t fw_receive_size = 0;
+
+
 
 
 
@@ -274,6 +303,36 @@ static void bootFirmJump(cmd_t *p_cmd)
   cmdSendResp(p_cmd, p_cmd->packet.cmd, CMD_OK, NULL, 0); 
 }
 
+static void bootFirmBegin(cmd_t *p_cmd)
+{
+  cmd_packet_t *p_packet = &p_cmd->packet;
+  uint16_t err_code = CMD_OK;
+
+
+  fw_receive_size = 0;
+  
+  if (p_packet->length == sizeof(boot_begin_t))
+  {
+    memcpy(&boot_begin, p_packet->data, sizeof(boot_begin_t));
+    is_begin = true;
+  } 
+  else
+  {
+    err_code = ERR_BOOT_WRONG_RANGE;
+  }
+
+  cmdSendResp(p_cmd, p_cmd->packet.cmd, err_code, NULL, 0);
+}
+
+static void bootFirmEnd(cmd_t *p_cmd)
+{
+  uint16_t err_code = CMD_OK;
+
+  is_begin = false;
+
+  cmdSendResp(p_cmd, p_cmd->packet.cmd, err_code, NULL, 0);
+}
+
 bool cmdBootProcess(cmd_t *p_cmd)
 {
   bool ret = true;
@@ -315,6 +374,14 @@ bool cmdBootProcess(cmd_t *p_cmd)
 
     case BOOT_CMD_FW_JUMP:
       bootFirmJump(p_cmd);
+      break;
+
+    case BOOT_CMD_FW_BEGIN:
+      bootFirmBegin(p_cmd);
+      break;
+
+    case BOOT_CMD_FW_END:
+      bootFirmEnd(p_cmd);
       break;
 
     default:
