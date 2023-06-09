@@ -1,6 +1,6 @@
 #include "ap.h"
 #include "thread/cmd/cmd_thread.h"
-
+#include "wiznet/wiznet.h"
 
 
 
@@ -59,5 +59,7 @@ void apMain(void)
       cmdThreadUpdate();
     }
     cliMain();
+
+    wiznetUpdate();
   }
 }

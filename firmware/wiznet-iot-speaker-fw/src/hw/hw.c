@@ -1,4 +1,6 @@
 #include "hw.h"
+#include "wiznet/wiznet.h"
+
 
 
 extern uint32_t _fw_flash_begin;
@@ -70,5 +72,7 @@ bool hwInit(void)
   encoderInit();
   lcdInit();
 
+  wiznetInit();
+  
   return true;
 }
