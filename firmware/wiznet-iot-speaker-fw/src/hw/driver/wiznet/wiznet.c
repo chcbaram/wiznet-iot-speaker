@@ -137,6 +137,9 @@ void wiznetPrintInfo(wiz_NetInfo *p_info)
 
 bool wiznetIsGetIP(void)
 {
+  if (is_init_dhcp == false)
+    return true;
+    
   return dhcp_get_ip_flag;
 }
 
@@ -173,6 +176,8 @@ void wiznetUpdate(void)
         if (dhcp_get_ip_flag == false)
         {
           logPrintf("[OK] DHCP Success\n");
+          wiznetPrintInfo(&net_info);
+          logPrintf("     DHCP Leased Time : %ld Sec\n", getDHCPLeasetime());          
           dhcp_get_ip_flag = true;
         }
         break;
@@ -230,9 +235,6 @@ static void wizchip_dhcp_assign(void)
 
   /* Network initialize */
   ctlnetwork(CN_SET_NETINFO, (void *)&net_info);
-
-  wiznetPrintInfo(&net_info);
-  logPrintf("     DHCP Leased Time : %ld Sec\n", getDHCPLeasetime());
 }
 
 static void wizchip_dhcp_conflict(void)

@@ -193,6 +193,7 @@ void lcdDrawImage(image_t *p_img, int16_t x, int16_t y);
 void lcdLogoOn(void);
 void lcdLogoOff(void);
 bool lcdLogoIsOn(void);
+void lcdLogoDraw(int16_t x, int16_t y);
 #endif
 
 #endif /* _USE_HW_LCD */

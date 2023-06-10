@@ -815,6 +815,7 @@ uint32_t lcdGetStrWidth(const char *fmt, ...)
   len = vsnprintf(print_buffer, 255, fmt, arg);
   va_end (arg);
 
+
   str_len = 0;
 
   for( i=0; i<len; i+=Size_Char )
@@ -1083,7 +1084,6 @@ void lcdPrintfResize(int x, int y, uint16_t color,  float ratio_h, const char *f
 void lcdPrintfRect(int x, int y, int w, int h, uint16_t color, float ratio_h, uint16_t align, const char *fmt, ...)
 {
   va_list arg;
-  va_start (arg, fmt);
   int32_t len;
   char print_buffer[256];
   int Size_Char;
@@ -1107,7 +1107,7 @@ void lcdPrintfRect(int x, int y, int w, int h, uint16_t color, float ratio_h, ui
   r_src.p_data = font_src_buffer;
 
 
-
+  va_start (arg, fmt);
   len = vsnprintf(print_buffer, 255, fmt, arg);
   va_end (arg);
   
@@ -1118,7 +1118,7 @@ void lcdPrintfRect(int x, int y, int w, int h, uint16_t color, float ratio_h, ui
   ratio = ratio_h / 16;
 
 
-  str_width = lcdGetStrWidth(fmt) * ratio;
+  str_width = lcdGetStrWidth(print_buffer) * ratio;
 
   x = 0;
   y = 0;
@@ -1291,12 +1291,12 @@ void lcdLogoOn(void)
   logo = lcdCreateImage(&logo_img, 0, 0, 0, 0);
 
   x = (lcdGetWidth() - logo.w) / 2;
-  y = (lcdGetHeight() - logo.h) / 2;
+  y = (lcdGetHeight() - logo.h) / 2 - 16;
 
   for (int i=0; i<32; i++)
   {
     lcdClearBuffer(black);
-    lcdDrawImage(&logo, x, y - 16 + ((32-i)*3));
+    lcdDrawImage(&logo, x, y + ((31-i)*3));
 
     // lcdDrawRect(0, 0, LCD_WIDTH-0, LCD_HEIGHT-0, white);
     // lcdDrawRect(1, 1, LCD_WIDTH-2, LCD_HEIGHT-2, white);
@@ -1305,6 +1305,20 @@ void lcdLogoOn(void)
   }
 
   is_logo_on = true;
+}
+
+void lcdLogoDraw(int16_t x, int16_t y)
+{
+  image_t logo;
+  
+  logo = lcdCreateImage(&logo_img, 0, 0, 0, 0);
+
+  if (x < 0)
+    x = (lcdGetWidth() - logo.w) / 2;
+  if (y < 0)
+    y = (lcdGetHeight() - logo.h) / 2 - 16;
+
+  lcdDrawImage(&logo, x, y);
 }
 
 void lcdLogoOff(void)

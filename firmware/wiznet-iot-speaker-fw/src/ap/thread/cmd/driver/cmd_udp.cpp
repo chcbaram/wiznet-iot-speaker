@@ -111,29 +111,19 @@ uint32_t available(void *args)
 
 
     uint16_t rx_count;
-    uint16_t rx_index;
 
-    if (reg_size.d16%2 == 0)
-      rx_count = (reg_size.d16 + 0) / 2;
-    else
-      rx_count = (reg_size.d16 + 1) / 2;
-
-    rx_index = 0;
-    for (int i=0; i<rx_count; i++)
+    rx_count = reg_size.d16;
+    for (uint32_t i=0; i<rx_count; i++)
     {
-      reg_data.d16 = W5300_REGS->SOCKET[socket_id].RX_FIFOR.d16;
-
-      // logPrintf("rx %d : 0x%02X\n", rx_index, reg_data.d8[0]);
-
-      if (rx_index < reg_size.d16)
+      if ((i & 1) == 0)
+      {
+        reg_data.d16 = W5300_REGS->SOCKET[socket_id].RX_FIFOR.d16;
         qbufferWrite(&rx_q, &reg_data.d8[0], 1);
-      rx_index++;
-
-      // logPrintf("rx %d : 0x%02X\n", rx_index, reg_data.d8[1]);
-
-      if (rx_index < reg_size.d16)
+      }
+      else
+      {
         qbufferWrite(&rx_q, &reg_data.d8[1], 1);
-      rx_index++;
+      }
     }
 
     W5300_REGS->SOCKET[socket_id].IR.d16 = W5300_REGS->SOCKET[socket_id].IR.d16;

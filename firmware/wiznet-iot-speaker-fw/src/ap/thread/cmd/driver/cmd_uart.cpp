@@ -53,7 +53,10 @@ uint32_t available(void *args)
 {
   cmd_uart_args_t *p_args = (cmd_uart_args_t *)args;
 
-  return uartAvailable(p_args->ch);
+  if (p_args->ch != cliGetPort())
+    return uartAvailable(p_args->ch);
+  else
+    return 0;
 }
 
 bool flush(void *args)
