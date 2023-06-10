@@ -69,6 +69,11 @@ bool bootDeInit(void)
   return ret;
 }
 
+cmd_driver_t *bootGetDriver(void)
+{
+  return &cmd_driver;
+}
+
 uint16_t bootCmdReadInfo(boot_info_t *p_info, uint32_t timeout)
 {
   uint16_t ret = CMD_OK;

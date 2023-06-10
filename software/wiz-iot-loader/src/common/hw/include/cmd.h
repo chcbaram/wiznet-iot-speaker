@@ -53,6 +53,7 @@ typedef struct cmd_driver_t_
   bool     (*flush)(void *args);
   uint8_t  (*read)(void *args);
   uint32_t (*write)(void *args, uint8_t *p_data, uint32_t length);  
+  bool     (*ioctl)(uint32_t ctl, void *p_data, uint32_t length);
 } cmd_driver_t;
 
 

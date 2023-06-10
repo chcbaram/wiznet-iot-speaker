@@ -13,7 +13,7 @@ static uint32_t available(void *args);
 static bool flush(void *args);
 static uint8_t read(void *args);
 static uint32_t write(void *args, uint8_t *p_data, uint32_t length);  
-
+static bool ioctl(uint32_t ctl, void *p_data, uint32_t length);
 
 
 bool cmdUartInitDriver(cmd_driver_t *p_driver, uint8_t ch, uint32_t baud)
@@ -28,7 +28,8 @@ bool cmdUartInitDriver(cmd_driver_t *p_driver, uint8_t ch, uint32_t baud)
   p_driver->available = available;
   p_driver->flush = flush;
   p_driver->read = read;
-  p_driver->write= write;
+  p_driver->write = write;
+  p_driver->ioctl = ioctl; 
 
   return true;
 }
@@ -73,4 +74,9 @@ uint32_t write(void *args, uint8_t *p_data, uint32_t length)
   cmd_uart_args_t *p_args = (cmd_uart_args_t *)args;
 
   return uartWrite(p_args->ch, p_data, length);
+}
+
+bool ioctl(uint32_t ctl, void *p_data, uint32_t length)
+{
+  return true;
 }

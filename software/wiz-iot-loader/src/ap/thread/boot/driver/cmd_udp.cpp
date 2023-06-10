@@ -17,7 +17,7 @@ static uint32_t available(void *args);
 static bool flush(void *args);
 static uint8_t read(void *args);
 static uint32_t write(void *args, uint8_t *p_data, uint32_t length);  
-
+static bool ioctl(uint32_t ctl, void *p_data, uint32_t length);
 
 using namespace ez;
 static ez_socket_t ez_udp;
@@ -47,7 +47,8 @@ bool cmdUdpInitDriver(cmd_driver_t *p_driver, const char *ip_addr, uint32_t port
   p_driver->available = available;
   p_driver->flush = flush;
   p_driver->read = read;
-  p_driver->write= write;
+  p_driver->write = write;
+  p_driver->ioctl = ioctl;
 
   is_init = true;
 
@@ -155,4 +156,16 @@ uint32_t write(void *args, uint8_t *p_data, uint32_t length)
   if (ret < 0) ret = 0;
 
   return (uint32_t)ret;
+}
+
+bool ioctl(uint32_t ctl, void *p_data, uint32_t length)
+{
+  if (ctl == 0)
+  {
+    ez_ip_addr_t ip_addr;
+
+    socketGetRemoteIP(&ez_udp, &ip_addr);
+    logPrintf("ip : %s : %d\n", ip_addr.ip_addr, ip_addr.port);
+  }
+  return true;
 }

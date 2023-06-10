@@ -386,6 +386,11 @@ void apDownMode(void)
         logPrintf("bootloader mode\n");
       else
         logPrintf("firmware mode\n");
+
+      if (arg_option.is_udp)
+      {
+        bootGetDriver()->ioctl(0, NULL, 0);
+      }
     }
     else
     {

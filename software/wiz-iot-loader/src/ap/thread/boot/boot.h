@@ -36,6 +36,8 @@ bool bootInit(uint8_t ch, char *port_name, uint32_t baud);
 bool bootInitUdp(char *ip_addr, uint32_t port);
 bool bootDeInit(void);
 
+cmd_driver_t *bootGetDriver(void);
+
 
 uint16_t bootCmdReadInfo(boot_info_t *info, uint32_t timeout);
 uint16_t bootCmdReadVersion(boot_version_t *version, uint32_t timeout);
