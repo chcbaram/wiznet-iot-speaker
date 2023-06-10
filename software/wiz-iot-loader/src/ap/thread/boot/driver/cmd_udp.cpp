@@ -64,6 +64,7 @@ bool open(void *args)
 
   socketInit(&ez_udp, EZ_SOCKET_CLIENT, EZ_SOCKET_UDP);
   socketCreate(&ez_udp);
+  socketSetBroadCast(&ez_udp, true);
 
   con_thread = std::thread([=] 
   {
@@ -99,6 +100,8 @@ bool open(void *args)
 
 
   socketSetRemoteIP(&ez_udp, (const char *)p_args->ip_addr, p_args->port);
+
+  logDebug("%s : %d\n", p_args->ip_addr, p_args->port);
 
   return ret;
 }

@@ -149,6 +149,17 @@ bool apGetOption(int argc, char *argv[])
     argc_i++;
   }
 
+  if (arg_option.is_udp == true)
+  {
+    if ((arg_option.arg_bits & ARG_OPTION_PORT) == 0)
+    {
+      const char ip_str[32] = "255.255.255.255";
+      strncpy(arg_option.port_str, ip_str, 128);
+      arg_option.arg_bits |= ARG_OPTION_PORT;
+      logPrintf("-p %s\n", arg_option.port_str);
+    }
+  }
+
   if (argc == 1)
   {
     apShowHelp();

@@ -53,6 +53,7 @@ ez_err_t socketInit(ez_socket_t *p_socket, ez_role_t socket_role, ez_protocol_t 
   p_socket->protocol = protocol;
   p_socket->is_local_ip = false;
   p_socket->is_remote_ip = false;
+  p_socket->is_broadcast = false;
 
   return EZ_OK;
 }
@@ -221,6 +222,37 @@ ez_err_t socketSetReceiveTimeout(ez_socket_t *p_socket, uint32_t milliseconds)
   return EZ_OK;
 }
 
+ez_err_t socketSetBroadCast(ez_socket_t *p_socket, bool broad_cast)
+{
+  ez_err_t err_ret;
+  SOCKET h_socket;
+
+
+  logDebug("socketSetBroadCast(%s)\n", broad_cast ? "True":"False");
+
+  err_ret = socketIsValid(p_socket);
+  if (err_ret != EZ_OK)
+  {
+    EZ_LOG_TRACE_ERROR(0);
+    return err_ret;
+  }
+
+  if (p_socket->role == EZ_SOCKET_SERVER)
+  {
+    h_socket = p_socket->h_client;
+  }
+  else
+  {
+    h_socket = p_socket->h_socket;
+  }
+
+  p_socket->is_broadcast = broad_cast;
+
+  int opt = broad_cast;
+  setsockopt(h_socket, SOL_SOCKET, SO_BROADCAST, (const char *)&opt, sizeof(opt));
+
+  return EZ_OK;
+}
 
 ez_err_t socketBind(ez_socket_t *p_socket, const char *ip_addr, uint32_t port)
 {
@@ -429,7 +461,7 @@ int socketWrite(ez_socket_t *p_socket, const uint8_t *p_data, uint32_t length)
   }
   else
   {
-    if (p_socket->is_remote_ip == true)
+    if (p_socket->is_remote_ip == true || p_socket->is_broadcast == true)
     {
       ret = sendto(h_socket, (const char *)p_data, length, 0, 
                   (SOCKADDR*)&p_socket->remote_ip.socket_addr, sizeof(p_socket->remote_ip.socket_addr));
@@ -454,7 +486,7 @@ int socketWrite(ez_socket_t *p_socket, const uint8_t *p_data, uint32_t length)
     }
     else
     {
-      ret = -1;
+      ret = -2;
     }
   }
 #endif  

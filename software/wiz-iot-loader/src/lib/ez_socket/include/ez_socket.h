@@ -84,13 +84,13 @@ typedef struct
 
   bool is_local_ip;  
   bool is_remote_ip;
+  bool is_broadcast;
 
   ez_ip_addr_t local_ip;
   ez_ip_addr_t remote_ip;
 
   ez_role_t role;
   ez_protocol_t protocol;
-
 
   uint32_t packet_id;
 
@@ -101,6 +101,7 @@ typedef struct
 ez_err_t socketInit(ez_socket_t *p_socket, ez_role_t socket_role, ez_protocol_t protocol=EZ_SOCKET_TCP);
 ez_err_t socketDeInit(ez_socket_t *p_socket);
 ez_err_t socketCreate(ez_socket_t *p_socket);
+ez_err_t socketSetBroadCast(ez_socket_t *p_socket, bool broad_cast);
 ez_err_t socketSetReceiveTimeout(ez_socket_t *p_socket, uint32_t milliseconds);
 ez_err_t socketBind(ez_socket_t *p_socket, const char *ip_addr, uint32_t port);
 ez_err_t socketConnect(ez_socket_t *p_socket, const char *ip_addr, uint32_t port);

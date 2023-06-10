@@ -87,8 +87,8 @@ target_compile_options(${EXECUTABLE} PRIVATE
   )
 
 target_link_options(${EXECUTABLE} PRIVATE
-  # -T../src/bsp/ldscript/STM32H723ZGTX_FLASH.ld
-  -T../src/bsp/ldscript/STM32H723ZGTX_BOOT.ld
+  -T../src/bsp/ldscript/STM32H723ZGTX_FLASH.ld
+  # -T../src/bsp/ldscript/STM32H723ZGTX_BOOT.ld
   -mcpu=cortex-m7
   -mthumb
   -mfpu=fpv5-d16 

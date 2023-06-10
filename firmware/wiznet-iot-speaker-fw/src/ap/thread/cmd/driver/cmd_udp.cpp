@@ -109,7 +109,6 @@ uint32_t available(void *args)
     reg[0] = W5300_REGS->SOCKET[socket_id].RX_FIFOR.d16;
     reg_size.d16 = SWAP16(reg[0]);
 
-
     uint16_t rx_count;
 
     rx_count = reg_size.d16;
