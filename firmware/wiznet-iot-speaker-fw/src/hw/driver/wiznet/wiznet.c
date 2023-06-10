@@ -1,6 +1,6 @@
 #include "wiznet.h"
 #include "swtimer.h"
-
+#include "cli.h"
 
 
 #define SOCKET_DHCP           HW_WIZNET_SOCKET_DHCP
@@ -12,8 +12,8 @@
 #define ETHERNET_BUF_MAX_SIZE (1024 * 2)
 
 
+static void cliCmd(cli_args_t *args);
 static void wiznetPrintInfo(wiz_NetInfo *p_info);
-
 static void wizchip_dhcp_init(void);
 static void wizchip_dhcp_assign(void);
 static void wizchip_dhcp_conflict(void);
@@ -70,6 +70,8 @@ bool wiznetInit(void)
 
   ctlnetwork(CN_SET_NETINFO, (void *)&net_info);
   wiznetPrintInfo(&net_info);
+
+  cliAdd("wiznet", cliCmd);
 
   return ret;
 }
@@ -236,4 +238,24 @@ static void wizchip_dhcp_assign(void)
 static void wizchip_dhcp_conflict(void)
 {
   logPrintf("     Conflict IP from DHCP\n");
+}
+
+void cliCmd(cli_args_t *args)
+{
+  bool ret = false;
+
+
+  if (args->argc == 1 && args->isStr(0, "info") == true)
+  {
+    cliPrintf("is_init \t: %d\n", is_init);
+    cliPrintf("is_dhcp \t: %d\n", is_init_dhcp);
+    
+    wiznetPrintInfo(&net_info);
+    ret = true;
+  }  
+
+  if (ret != true)
+  {
+    cliPrintf("wiznet info\n");
+  }
 }
