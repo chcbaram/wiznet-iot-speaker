@@ -106,6 +106,10 @@
 #define _USE_HW_CMD
 #define      HW_CMD_MAX_DATA_LENGTH 2048
 
+#define _USE_HW_WIZNET
+#define      HW_WIZNET_SOCKET_BOOT  0
+#define      HW_WIZNET_SOCKET_DHCP  1
+
 
 #define _PIN_GPIO_W5300_RST         0
 #define _PIN_GPIO_SDCARD_DETECT     1

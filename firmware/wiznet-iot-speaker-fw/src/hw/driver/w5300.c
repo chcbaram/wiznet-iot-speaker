@@ -14,7 +14,7 @@ static const int32_t gpio_rst = _PIN_GPIO_W5300_RST;
 static const uint8_t default_ip[4]      = {172, 30,  1,  55};
 static const uint8_t default_subnet[4]  = {255,255, 255,  0};
 static const uint8_t default_gateway[4] = {172, 30,  1, 254};
-static const uint8_t default_mac[6]     = {0, 1, 2, 3, 4, 5};
+static       uint8_t default_mac[6]     = {0x00, 0x00, 0x12, 0x34, 0x56, 0x78};
 
 
 
@@ -35,6 +35,14 @@ bool w5300Init(void)
   // W5300_REGS->MR.d16 |= (1<<8);
   W5300_REGS->MR.d16 |= (1<<2);
   delay(50);
+
+  data_t dev_id;
+  dev_id.u32D = *(uint32_t *)UID_BASE;
+
+  default_mac[2] = dev_id.u8Data[0];
+  default_mac[3] = dev_id.u8Data[1];
+  default_mac[4] = dev_id.u8Data[2];
+  default_mac[5] = dev_id.u8Data[3];
 
   w5300SetNetInfo(default_ip,
                   default_subnet,

@@ -1,52 +1,39 @@
 #include "wiznet.h"
+#include "swtimer.h"
 
 
-/* Socket */
-#define SOCKET_DHCP       1
-#define SOCKET_DNS        2
 
-/* Retry count */
-#define DHCP_RETRY_COUNT  5
-#define DNS_RETRY_COUNT   5
+#define SOCKET_DHCP           HW_WIZNET_SOCKET_DHCP
+
+
+#define DHCP_RETRY_COUNT      5
+#define DNS_RETRY_COUNT       5
 
 #define ETHERNET_BUF_MAX_SIZE (1024 * 2)
 
 
 static void wiznetPrintInfo(wiz_NetInfo *p_info);
 
-/* DHCP */
 static void wizchip_dhcp_init(void);
 static void wizchip_dhcp_assign(void);
 static void wizchip_dhcp_conflict(void);
+static void wiznetTimerISR(void *arg);
 
-/* Timer */
-static void repeating_timer_callback(void);
 
 
 static uint8_t memsize[2][8] = 
     {{8, 8, 8, 8, 8, 8, 8, 8}, 
      {8, 8, 8, 8, 8, 8, 8, 8}};
 
-static uint8_t g_ethernet_buf[ETHERNET_BUF_MAX_SIZE] = {
-    0,
-}; // common buffer
-
-/* DHCP */
-static uint8_t g_dhcp_get_ip_flag = 0;
-
-/* DNS */
-static uint8_t g_dns_target_domain[] = "www.wiznet.io";
-static uint8_t g_dns_target_ip[4] = {
-    0,
-};
-static uint8_t g_dns_get_ip_flag = 0;
+static uint8_t ethernet_buf[ETHERNET_BUF_MAX_SIZE] = {0,}; 
+static bool    dhcp_get_ip_flag = false;
 
 
 static bool is_init = false;
 
-static wiz_NetInfo g_net_info =
+static wiz_NetInfo net_info =
     {
-        .mac  = {0x00, 0x08, 0xDC, 0x12, 0x34, 0x56}, // MAC address
+        .mac  = {0x00, 0x00, 0x12, 0x34, 0x56, 0x78}, // MAC address
         .ip   = {172,  30,   1,  55},                 // IP address
         .sn   = {255, 255, 255,   0},                 // Subnet Mask
         .gw   = {172,  30,   1, 254},                 // Gateway
@@ -62,30 +49,33 @@ bool wiznetInit(void)
 {
   bool ret = true;
 
-  for (int i=0; i<8; i++)
-  {
-    logPrintf("0x%X\n", getSn_SR(i));
-  }
+
+  data_t dev_id;
+  dev_id.u32D = *(uint32_t *)UID_BASE;
+
+  net_info.mac[2] = dev_id.u8Data[0];
+  net_info.mac[3] = dev_id.u8Data[1];
+  net_info.mac[4] = dev_id.u8Data[2];
+  net_info.mac[5] = dev_id.u8Data[3];
+
 
   if (ctlwizchip(CW_INIT_WIZCHIP, (void *)memsize) == -1)
   {
     ret = false;
   }
-
   logPrintf("[%s] wiznetInit()\n", ret ? "OK":"NG");
 
   is_init = ret;
 
   wizchip_dhcp_init();
-  
-  DNS_init(SOCKET_DNS, g_ethernet_buf);
+  ctlnetwork(CN_SET_NETINFO, (void *)&net_info);
 
-  // wiznetPrintInfo();
 
-  for (int i=0; i<8; i++)
-  {
-    logPrintf("0x%X\n", getSn_SR(i));
-  }
+  swtimer_handle_t timer_ch;
+  timer_ch = swtimerGetHandle();
+  swtimerSet(timer_ch, 1000, LOOP_TIME, wiznetTimerISR, NULL);
+  swtimerStart(timer_ch);
+
   return ret;
 }
 
@@ -109,6 +99,8 @@ void wiznetPrintInfo(wiz_NetInfo *p_info)
   ctlnetwork(CN_GET_NETINFO, (void *)&net_info);
   ctlwizchip(CW_GET_ID, (void *)tmp_str);
 
+  logPrintf("[  ] wiznetInfo()\n");
+
   if (net_info.dhcp == NETINFO_DHCP)
   {
     logPrintf("     %s config : DHCP\n", (char *)tmp_str);
@@ -125,124 +117,107 @@ void wiznetPrintInfo(wiz_NetInfo *p_info)
   logPrintf("     DNS          : %d.%d.%d.%d\n", net_info.dns[0], net_info.dns[1], net_info.dns[2], net_info.dns[3]);
 }
 
-void wizchip_dhcp_init(void)
+bool wiznetIsGetIP(void)
 {
-    logPrintf(" DHCP client running\n");
-
-    DHCP_init(SOCKET_DHCP, g_ethernet_buf);
-
-    reg_dhcp_cbfunc(wizchip_dhcp_assign, wizchip_dhcp_assign, wizchip_dhcp_conflict);
+  return dhcp_get_ip_flag;
 }
 
-static void wizchip_dhcp_assign(void)
+bool wiznetGetInfo(wiznet_info_t *p_info)
 {
-    getIPfromDHCP(g_net_info.ip);
-    getGWfromDHCP(g_net_info.gw);
-    getSNfromDHCP(g_net_info.sn);
-    getDNSfromDHCP(g_net_info.dns);
+  memcpy(p_info->ip,  net_info.ip,  sizeof(net_info.ip));
+  memcpy(p_info->dns, net_info.dns, sizeof(net_info.dns));
+  memcpy(p_info->gw,  net_info.gw,  sizeof(net_info.gw));
+  memcpy(p_info->mac, net_info.mac, sizeof(net_info.mac));
+  memcpy(p_info->sn,  net_info.sn, sizeof(net_info.sn));
 
-    g_net_info.dhcp = NETINFO_DHCP;
+  p_info->is_get_ip = (net_info.dhcp == NETINFO_DHCP) ? true:false;
 
-    /* Network initialize */
-    ctlnetwork(CN_SET_NETINFO, (void *)&g_net_info);
-
-    wiznetPrintInfo(&g_net_info);
-    logPrintf(" DHCP leased time : %ld seconds\n", getDHCPLeasetime());
+  return true;
 }
 
-static void wizchip_dhcp_conflict(void)
+void wiznetUpdate(void)
 {
-    logPrintf(" Conflict IP from DHCP\n");
+  static uint8_t dhcp_state = 0;
+  static uint8_t dhcp_retry = 0;
 
-    // halt or reset or any...
-    while (1)
-        ; // this example is halt.
+
+  // Assigned IP through DHCP
+  //
+  if (net_info.dhcp == NETINFO_DHCP)
+  {
+    dhcp_state = DHCP_run();
+
+    switch(dhcp_state)
+    {
+      case DHCP_IP_LEASED:
+        if (dhcp_get_ip_flag == false)
+        {
+          logPrintf("[OK] DHCP Success\n");
+          dhcp_get_ip_flag = true;
+        }
+        break;
+
+      case DHCP_FAILED:
+        dhcp_retry++;
+
+        if (dhcp_retry >= DHCP_RETRY_COUNT)
+        {
+          dhcp_get_ip_flag = false;
+          DHCP_stop();
+
+          ctlnetwork(CN_SET_NETINFO, (void *)&net_info);
+
+          logPrintf("[NG] DHCP_FAILED\n");
+        }
+        else
+        {
+          logPrintf("[  ] DHCP RETRY %d\n", dhcp_retry);
+        }
+        break;
+
+
+      case DHCP_RUNNING:
+      case DHCP_IP_ASSIGN:
+      case DHCP_IP_CHANGED:
+      case DHCP_STOPPED:
+      default:
+        break;
+    }
+  }
 }
 
-/* Timer */
-static void repeating_timer_callback(void)
+void wiznetTimerISR(void *arg)
 {
   DHCP_time_handler();
   DNS_time_handler();
 }
 
-
-/* Initialize */
-uint8_t retval     = 0;
-uint8_t dhcp_retry = 0;
-uint8_t dns_retry  = 0;
-
-void wiznetUpdate(void)
+void wizchip_dhcp_init(void)
 {
+  logPrintf("     DHCP Client Running\n");
 
-  /* Assigned IP through DHCP */
-  if (g_net_info.dhcp == NETINFO_DHCP)
-  {
-      retval = DHCP_run();
+  DHCP_init(SOCKET_DHCP, ethernet_buf);
 
-      if (retval == DHCP_IP_LEASED)
-      {
-          if (g_dhcp_get_ip_flag == 0)
-          {
-              logPrintf(" DHCP success\n");
+  reg_dhcp_cbfunc(wizchip_dhcp_assign, wizchip_dhcp_assign, wizchip_dhcp_conflict);
+}
 
-              g_dhcp_get_ip_flag = 1;
-          }
-      }
-      else if (retval == DHCP_FAILED)
-      {
-          g_dhcp_get_ip_flag = 0;
-          dhcp_retry++;
+static void wizchip_dhcp_assign(void)
+{
+  getIPfromDHCP(net_info.ip);
+  getGWfromDHCP(net_info.gw);
+  getSNfromDHCP(net_info.sn);
+  getDNSfromDHCP(net_info.dns);
 
-          if (dhcp_retry <= DHCP_RETRY_COUNT)
-          {
-              logPrintf(" DHCP timeout occurred and retry %d\n", dhcp_retry);
-          }
-      }
+  net_info.dhcp = NETINFO_DHCP;
 
-      if (dhcp_retry > DHCP_RETRY_COUNT)
-      {
-          logPrintf(" DHCP failed\n");
+  /* Network initialize */
+  ctlnetwork(CN_SET_NETINFO, (void *)&net_info);
 
-          DHCP_stop();
+  wiznetPrintInfo(&net_info);
+  logPrintf("     DHCP Leased Time : %ld Sec\n", getDHCPLeasetime());
+}
 
-          while (1)
-              ;
-      }
-  }
-
-      // /* Get IP through DNS */
-      // if ((g_dns_get_ip_flag == 0) && (retval == DHCP_IP_LEASED))
-      // {
-      //     while (1)
-      //     {
-      //         if (DNS_run(g_net_info.dns, g_dns_target_domain, g_dns_target_ip) > 0)
-      //         {
-      //             logPrintf(" DNS success\n");
-      //             logPrintf(" Target domain : %s\n", g_dns_target_domain);
-      //             logPrintf(" IP of target domain : %d.%d.%d.%d\n", g_dns_target_ip[0], g_dns_target_ip[1], g_dns_target_ip[2], g_dns_target_ip[3]);
-
-      //             g_dns_get_ip_flag = 1;
-
-      //             break;
-      //         }
-      //         else
-      //         {
-      //             dns_retry++;
-
-      //             if (dns_retry <= DNS_RETRY_COUNT)
-      //             {
-      //                 logPrintf(" DNS timeout occurred and retry %d\n", dns_retry);
-      //             }
-      //         }
-
-      //         if (dns_retry > DNS_RETRY_COUNT)
-      //         {
-      //             logPrintf(" DNS failed\n");
-
-      //             while (1)
-      //                 ;
-      //         }
-      //     }
-      // }
+static void wizchip_dhcp_conflict(void)
+{
+  logPrintf("     Conflict IP from DHCP\n");
 }

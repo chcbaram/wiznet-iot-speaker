@@ -15,9 +15,23 @@ extern "C" {
 #include "wiznet/dns/dns.h"
 
 
+typedef struct 
+{
+  bool    is_get_ip;
+
+  uint8_t mac[6];  ///< Source Mac Address
+  uint8_t ip[4];   ///< Source IP Address
+  uint8_t sn[4];   ///< Subnet Mask 
+  uint8_t gw[4];   ///< Gateway IP Address
+  uint8_t dns[4];  ///< DNS server IP Address
+  bool    dhcp;    
+} wiznet_info_t;
+
 
 bool wiznetInit(void);
 void wiznetUpdate(void);
+bool wiznetIsGetIP(void);
+bool wiznetGetInfo(wiznet_info_t *p_info);
 
 #ifdef __cplusplus
 }
