@@ -107,7 +107,7 @@
 #define      HW_CMD_MAX_DATA_LENGTH 2048
 
 #define _USE_HW_WIZNET
-#define      HW_WIZNET_SOCKET_BOOT  0
+#define      HW_WIZNET_SOCKET_CMD   0
 #define      HW_WIZNET_SOCKET_DHCP  1
 #define      HW_WIZNET_SOCKET_SNTP  2
 

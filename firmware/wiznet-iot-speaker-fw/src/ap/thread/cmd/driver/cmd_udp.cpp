@@ -18,7 +18,7 @@ static uint32_t write(void *args, uint8_t *p_data, uint32_t length);
 static bool is_init = false;
 static bool is_open = false;
 
-static uint8_t   socket_id = HW_WIZNET_SOCKET_BOOT;
+static uint8_t   socket_id = HW_WIZNET_SOCKET_CMD;
 static uint8_t   rx_buf[8*1024];
 static qbuffer_t rx_q;
 
