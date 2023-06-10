@@ -30,6 +30,7 @@ static bool    dhcp_get_ip_flag = false;
 
 
 static bool is_init = false;
+static bool is_init_dhcp = false;
 
 static wiz_NetInfo net_info =
     {
@@ -67,14 +68,29 @@ bool wiznetInit(void)
 
   is_init = ret;
 
-  wizchip_dhcp_init();
   ctlnetwork(CN_SET_NETINFO, (void *)&net_info);
+  wiznetPrintInfo(&net_info);
+
+  return ret;
+}
+
+bool wiznetDHCP(void)
+{
+  bool ret = true;
 
 
-  swtimer_handle_t timer_ch;
-  timer_ch = swtimerGetHandle();
-  swtimerSet(timer_ch, 1000, LOOP_TIME, wiznetTimerISR, NULL);
-  swtimerStart(timer_ch);
+  wizchip_dhcp_init();
+
+  if (is_init_dhcp == false)
+  {
+    swtimer_handle_t timer_ch;
+    timer_ch = swtimerGetHandle();
+    swtimerSet(timer_ch, 1000, LOOP_TIME, wiznetTimerISR, NULL);
+    swtimerStart(timer_ch);
+  }
+  is_init_dhcp = true;
+
+  logPrintf("[%s] wiznetDHCP()\n", ret ? "OK":"NG");
 
   return ret;
 }
@@ -128,9 +144,7 @@ bool wiznetGetInfo(wiznet_info_t *p_info)
   memcpy(p_info->dns, net_info.dns, sizeof(net_info.dns));
   memcpy(p_info->gw,  net_info.gw,  sizeof(net_info.gw));
   memcpy(p_info->mac, net_info.mac, sizeof(net_info.mac));
-  memcpy(p_info->sn,  net_info.sn, sizeof(net_info.sn));
-
-  p_info->is_get_ip = (net_info.dhcp == NETINFO_DHCP) ? true:false;
+  memcpy(p_info->sn,  net_info.sn,  sizeof(net_info.sn));
 
   return true;
 }
@@ -139,6 +153,10 @@ void wiznetUpdate(void)
 {
   static uint8_t dhcp_state = 0;
   static uint8_t dhcp_retry = 0;
+
+
+  if (is_init_dhcp == false)
+    return;
 
 
   // Assigned IP through DHCP
@@ -162,6 +180,7 @@ void wiznetUpdate(void)
 
         if (dhcp_retry >= DHCP_RETRY_COUNT)
         {
+          dhcp_retry = 0;
           dhcp_get_ip_flag = false;
           DHCP_stop();
 
@@ -194,10 +213,7 @@ void wiznetTimerISR(void *arg)
 
 void wizchip_dhcp_init(void)
 {
-  logPrintf("     DHCP Client Running\n");
-
   DHCP_init(SOCKET_DHCP, ethernet_buf);
-
   reg_dhcp_cbfunc(wizchip_dhcp_assign, wizchip_dhcp_assign, wizchip_dhcp_conflict);
 }
 

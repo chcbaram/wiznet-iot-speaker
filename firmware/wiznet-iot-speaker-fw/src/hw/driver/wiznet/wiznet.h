@@ -17,8 +17,6 @@ extern "C" {
 
 typedef struct 
 {
-  bool    is_get_ip;
-
   uint8_t mac[6];  ///< Source Mac Address
   uint8_t ip[4];   ///< Source IP Address
   uint8_t sn[4];   ///< Subnet Mask 
@@ -29,6 +27,7 @@ typedef struct
 
 
 bool wiznetInit(void);
+bool wiznetDHCP(void);
 void wiznetUpdate(void);
 bool wiznetIsGetIP(void);
 bool wiznetGetInfo(wiznet_info_t *p_info);

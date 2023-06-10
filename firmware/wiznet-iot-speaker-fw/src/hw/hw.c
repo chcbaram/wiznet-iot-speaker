@@ -73,6 +73,7 @@ bool hwInit(void)
   lcdInit();
 
   wiznetInit();
-  
+  wiznetDHCP();
+
   return true;
 }
