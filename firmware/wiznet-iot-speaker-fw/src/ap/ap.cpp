@@ -69,7 +69,7 @@ void apMain(void)
   }
 }
 
-
+#include <time.h>
 
 void lcdUpdate(void)
 {
@@ -96,12 +96,28 @@ void lcdUpdate(void)
     {
       lcdDrawFillRect(0+60/2, 150+32+2, LCD_WIDTH-60, 10, blue);
       lcdDrawFillRect(0+60/2, 150+32+2, (LCD_WIDTH-60) * index / 10, 10, green);
-      
+
       lcdPrintfRect(0, 150, LCD_WIDTH, 32, white, 32, LCD_ALIGN_H_CENTER|LCD_ALIGN_V_CENTER, 
                     "Getting_IP");
 
       index = (index+1)%11;
     }
+
+    rtc_time_t rtc_time;
+    rtc_date_t rtc_date;
+    const char *week_str[] = {"일", "월", "화", "수", "목", "금", "토"};
+
+    rtcGetTime(&rtc_time);
+    rtcGetDate(&rtc_date);
+
+    lcdDrawFillRect(0, 200, LCD_WIDTH, 32, green);
+    lcdPrintfRect(0, 200, LCD_WIDTH, 32, black, 32, LCD_ALIGN_H_CENTER|LCD_ALIGN_V_CENTER, 
+                  "%02d:%02d:%02d", rtc_time.hours, rtc_time.minutes, rtc_time.seconds);
+
+    lcdDrawFillRect(0, 0, LCD_WIDTH, 32, green);
+    lcdPrintfRect(0, 0, LCD_WIDTH, 32, black, 32, LCD_ALIGN_H_CENTER|LCD_ALIGN_V_CENTER, 
+                  "%02d-%d-%02d %s", rtc_date.year, rtc_date.month, rtc_date.day, week_str[rtc_date.week]);
+
     lcdRequestDraw();
   }
 }

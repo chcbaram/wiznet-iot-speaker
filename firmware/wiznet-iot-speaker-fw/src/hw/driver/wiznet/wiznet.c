@@ -1,6 +1,7 @@
 #include "wiznet.h"
 #include "swtimer.h"
 #include "cli.h"
+#include "rtc.h"
 
 
 #define SOCKET_DHCP           HW_WIZNET_SOCKET_DHCP
@@ -25,12 +26,18 @@ static uint8_t memsize[2][8] =
     {{8, 8, 8, 8, 8, 8, 8, 8}, 
      {8, 8, 8, 8, 8, 8, 8, 8}};
 
-static uint8_t ethernet_buf[ETHERNET_BUF_MAX_SIZE] = {0,}; 
+static uint8_t dhcp_buf[ETHERNET_BUF_MAX_SIZE] = {0,}; 
+static uint8_t sntp_buf[ETHERNET_BUF_MAX_SIZE] = {0,}; 
 static bool    dhcp_get_ip_flag = false;
-
+static bool    sntp_get_time_flag = false;
+static datetime sntp_time;
 
 static bool is_init = false;
 static bool is_init_dhcp = false;
+static bool is_init_sntp = false;
+
+
+
 
 static wiz_NetInfo net_info =
     {
@@ -97,6 +104,23 @@ bool wiznetDHCP(void)
   return ret;
 }
 
+bool wiznetSNTP(void)
+{
+  bool ret = true;
+  uint8_t ntp_server[4] = {128, 138, 141, 172};	// time.nist.gov
+	//uint8_t ntp_server[4] = {211, 233, 84, 186};	// kr.pool.ntp.org
+
+
+  SNTP_init(HW_WIZNET_SOCKET_SNTP, ntp_server, 40, sntp_buf);	// timezone: Korea, Republic of
+
+  is_init_sntp = true;
+  sntp_get_time_flag = false;
+
+  logPrintf("[%s] wiznetSNTP()\n", ret ? "OK":"NG");
+
+  return ret;
+}
+
 
 void wiznetPrintInfo(wiz_NetInfo *p_info)
 {
@@ -139,7 +163,7 @@ bool wiznetIsGetIP(void)
 {
   if (is_init_dhcp == false)
     return true;
-    
+
   return dhcp_get_ip_flag;
 }
 
@@ -154,7 +178,7 @@ bool wiznetGetInfo(wiznet_info_t *p_info)
   return true;
 }
 
-void wiznetUpdate(void)
+void wiznetUpdateDHCP(void)
 {
   static uint8_t dhcp_state = 0;
   static uint8_t dhcp_retry = 0;
@@ -212,6 +236,46 @@ void wiznetUpdate(void)
   }
 }
 
+void wiznetUpdateSNTP(void)
+{
+  if (is_init_sntp != true)
+    return;
+
+  if (dhcp_get_ip_flag != true)
+    return;
+
+  if (sntp_get_time_flag == true)
+    return;
+
+  if (SNTP_run(&sntp_time) == true)
+  {
+    logPrintf("[OK] SNTP\n");
+    logPrintf("     %d-%d-%d, %02d:%02d:%02d\n", 
+        sntp_time.yy, sntp_time.mo, sntp_time.dd, sntp_time.hh, sntp_time.mm, sntp_time.ss);
+
+    sntp_get_time_flag = true;
+
+    rtc_time_t rtc_time;
+    rtc_date_t rtc_date;
+
+    rtc_date.year  = sntp_time.yy % 100;
+    rtc_date.month = sntp_time.mo;
+    rtc_date.day   = sntp_time.dd;
+    rtcSetDate(&rtc_date);
+
+    rtc_time.hours   = sntp_time.hh;
+    rtc_time.minutes = sntp_time.mm;
+    rtc_time.seconds = sntp_time.ss; 
+    rtcSetTime(&rtc_time);
+  }
+}
+
+void wiznetUpdate(void)
+{
+  wiznetUpdateDHCP();
+  wiznetUpdateSNTP();
+}
+
 void wiznetTimerISR(void *arg)
 {
   DHCP_time_handler();
@@ -220,7 +284,7 @@ void wiznetTimerISR(void *arg)
 
 void wizchip_dhcp_init(void)
 {
-  DHCP_init(SOCKET_DHCP, ethernet_buf);
+  DHCP_init(SOCKET_DHCP, dhcp_buf);
   reg_dhcp_cbfunc(wizchip_dhcp_assign, wizchip_dhcp_assign, wizchip_dhcp_conflict);
 }
 

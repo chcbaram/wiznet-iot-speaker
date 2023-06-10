@@ -74,6 +74,7 @@ bool hwInit(void)
 
   wiznetInit();
   wiznetDHCP();
+  wiznetSNTP();
 
   return true;
 }

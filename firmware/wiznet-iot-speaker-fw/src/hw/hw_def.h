@@ -109,6 +109,7 @@
 #define _USE_HW_WIZNET
 #define      HW_WIZNET_SOCKET_BOOT  0
 #define      HW_WIZNET_SOCKET_DHCP  1
+#define      HW_WIZNET_SOCKET_SNTP  2
 
 
 #define _PIN_GPIO_W5300_RST         0

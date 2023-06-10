@@ -1,6 +1,6 @@
 #include "rtc.h"
 #include "cli.h"
-
+#include <time.h>
 
 
 #ifdef _USE_HW_CLI
@@ -99,6 +99,21 @@ bool rtcGetDate(rtc_date_t *rtc_date)
   rtc_date->year = sDate.Year;
   rtc_date->month = sDate.Month;
   rtc_date->day = sDate.Date;
+
+
+  struct tm  timeinfo;
+
+  memset(&timeinfo, 0, sizeof(timeinfo));
+  timeinfo.tm_year  = (2000 + sDate.Year) - 1900;
+  timeinfo.tm_mon   = sDate.Month - 1;
+  timeinfo.tm_mday  = sDate.Date;
+  timeinfo.tm_hour  = sTime.Hours;
+  timeinfo.tm_min   = sTime.Minutes;
+  timeinfo.tm_sec   = sTime.Seconds;
+
+  mktime(&timeinfo);
+
+  rtc_date->week = timeinfo.tm_wday;
 
   return true;
 }

@@ -23,6 +23,7 @@ typedef struct
   uint8_t year;
   uint8_t month;
   uint8_t day;
+  uint8_t week;
 } rtc_date_t;
 
 typedef struct
