@@ -32,7 +32,7 @@ target_compile_definitions(${EXECUTABLE} PRIVATE
 target_include_directories(${EXECUTABLE} PRIVATE
   src 
   src/ap
-  src/ap/include
+  src/ap/thread
   src/bsp
   src/hw
   src/common

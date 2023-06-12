@@ -2,6 +2,7 @@
 #include "driver/cmd_uart.h"
 #include "driver/cmd_udp.h"
 #include "process/cmd_boot.h"
+#include "process/cmd_audio.h"
 
 
 
@@ -24,6 +25,8 @@ bool cmdThreadInit(void)
   cmdInit(&cmd[1], &cmd_drvier[1]);
   cmdOpen(&cmd[1]);
 
+  cmdBootInit();
+  cmdAudioInit();
   return true;
 }
 
@@ -35,8 +38,9 @@ bool cmdThreadUpdate(void)
     {
       if (cmdReceivePacket(&cmd[i]) == true)
       {
-        bool ret = true;
-        ret &= cmdBootProcess(&cmd[i]);
+        bool ret = false;
+        ret |= cmdBootProcess(&cmd[i]);
+        ret |= cmdAudioProcess(&cmd[i]);
 
         if (ret != true)
         {

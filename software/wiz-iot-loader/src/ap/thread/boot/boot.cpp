@@ -1,6 +1,6 @@
 #include "boot.h"
-#include "driver/cmd_uart.h"
-#include "driver/cmd_udp.h"
+#include "cmd/driver/cmd_uart.h"
+#include "cmd/driver/cmd_udp.h"
 
 
 
@@ -22,7 +22,7 @@
 #define BOOT_CMD_FW_END                 0x000E
 
 
-
+static bool is_init = false;
 static cmd_t cmd_boot;
 static cmd_driver_t cmd_driver;
 
@@ -45,6 +45,7 @@ bool bootInit(uint8_t ch, char *port_name, uint32_t baud)
 
   ret = cmdOpen(&cmd_boot);
 
+  is_init = true;
   return ret;
 }
 
@@ -57,14 +58,18 @@ bool bootInitUdp(char *ip_addr, uint32_t port)
 
   ret = cmdOpen(&cmd_boot);
 
+  is_init = true;
   return ret;
 }
 
 bool bootDeInit(void)
 {
-  bool ret;
+  bool ret = true;
 
-  ret = cmdClose(&cmd_boot);
+  if (is_init)
+  {
+    ret = cmdClose(&cmd_boot);
+  }
 
   return ret;
 }

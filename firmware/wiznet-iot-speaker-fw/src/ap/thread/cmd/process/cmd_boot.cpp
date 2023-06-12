@@ -51,6 +51,11 @@ static uint32_t fw_receive_size = 0;
 
 
 
+bool cmdBootInit(void)
+{
+  return true;
+}
+
 static void bootInfo(cmd_t *p_cmd)
 {
   boot_info.mode = 1;

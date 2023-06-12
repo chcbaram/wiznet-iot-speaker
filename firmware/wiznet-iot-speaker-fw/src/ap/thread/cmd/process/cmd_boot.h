@@ -6,7 +6,7 @@
 
 
 
-
+bool cmdBootInit(void);
 bool cmdBootProcess(cmd_t *p_cmd);
 
 

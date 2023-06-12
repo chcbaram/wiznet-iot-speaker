@@ -7,7 +7,8 @@
 
 
 #include "ap.h"
-#include "thread/boot/boot.h"
+#include "boot/boot.h"
+#include "audio/audio.h"
 
 
 enum
@@ -30,6 +31,7 @@ typedef struct
 {
   uint8_t mode;
   bool    is_udp;
+  bool    is_audio;
   uint32_t arg_bits;
   char     port_str[128];
   uint32_t port_baud;
@@ -61,6 +63,7 @@ void apInit(void)
 
   arg_option.mode = MODE_DOWN;
   arg_option.is_udp = false;
+  arg_option.is_audio = false;
 }
 
 void apMain(int argc, char *argv[])
@@ -75,7 +78,14 @@ void apMain(int argc, char *argv[])
     return;
   }
 
-  apDownMode();
+  if (arg_option.is_audio)
+  {
+    audioMain(argc, argv);
+  }
+  else
+  {
+    apDownMode();
+  }
 
   apExit();
 }
@@ -102,6 +112,11 @@ bool apGetOption(int argc, char *argv[])
           arg_option.is_udp = true;
           arg_option.tx_block_len = 1024;
           logPrintf("-m udp\n");
+        }
+        else if (strncmp(argv[optind-1], "audio", 5) == 0)
+        {
+          arg_option.is_audio = true;
+          logPrintf("-m audio\n");
         }
         else
         {
@@ -554,6 +569,7 @@ void apExit(void)
 {
   printf("\n");
   bootDeInit();
+  audioDeInit();
 
   for (int i=0; i<UART_MAX_CH; i++)
   {
