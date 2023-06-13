@@ -7,6 +7,7 @@
 
 
 bool cmdBootInit(void);
+bool cmdBootIsBusy(void);
 bool cmdBootProcess(cmd_t *p_cmd);
 
 

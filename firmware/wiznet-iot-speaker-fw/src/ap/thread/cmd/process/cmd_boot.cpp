@@ -56,6 +56,11 @@ bool cmdBootInit(void)
   return true;
 }
 
+bool cmdBootIsBusy(void)
+{
+  return is_begin;
+}
+
 static void bootInfo(cmd_t *p_cmd)
 {
   boot_info.mode = 1;

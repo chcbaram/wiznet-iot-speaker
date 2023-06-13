@@ -80,6 +80,7 @@ void lcdUpdate(void)
 
 
   is_busy |= cmdAudioIsBusy();
+  is_busy |= cmdBootIsBusy();
   if (is_busy)
   {
     return;

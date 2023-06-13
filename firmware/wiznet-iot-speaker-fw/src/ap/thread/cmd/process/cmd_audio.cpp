@@ -21,6 +21,7 @@ typedef struct
 {
   uint8_t  hw_type;
   char     file_name[128];
+  uint32_t sample_rate;
   uint32_t file_size;
   uint8_t  file_type;
 } audio_begin_t;
