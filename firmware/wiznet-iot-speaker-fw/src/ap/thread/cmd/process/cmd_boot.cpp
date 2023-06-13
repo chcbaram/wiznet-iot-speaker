@@ -333,7 +333,7 @@ static void bootFirmEnd(cmd_t *p_cmd)
   cmdSendResp(p_cmd, p_cmd->packet.cmd, err_code, NULL, 0);
 }
 
-static void cmdBootUpdate(cmd_t *p_cmd)
+void cmdBootUpdate(cmd_t *p_cmd)
 {
   enum 
   {

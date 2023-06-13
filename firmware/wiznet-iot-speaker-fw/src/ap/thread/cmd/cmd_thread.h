@@ -4,6 +4,8 @@
 
 #include "ap_def.h"
 
+#include "process/cmd_boot.h"
+#include "process/cmd_audio.h"
 
 bool cmdThreadInit(void);
 bool cmdThreadUpdate(void);

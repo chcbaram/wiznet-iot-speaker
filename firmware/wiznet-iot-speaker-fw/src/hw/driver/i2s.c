@@ -347,7 +347,7 @@ void HAL_I2S_TxHalfCpltCallback(I2S_HandleTypeDef *hi2s)
 
 void HAL_I2S_ErrorCallback(I2S_HandleTypeDef *hi2s)
 {
-
+  return;
 }
 
 void SPI1_IRQHandler(void)
@@ -420,11 +420,11 @@ void HAL_I2S_MspInit(I2S_HandleTypeDef* i2sHandle)
     __HAL_LINKDMA(i2sHandle,hdmatx,hdma_spi1_tx);
 
     /* I2S1 interrupt Init */
-    HAL_NVIC_SetPriority(SPI1_IRQn, 5, 0);
+    HAL_NVIC_SetPriority(SPI1_IRQn, 4, 0);
     HAL_NVIC_EnableIRQ(SPI1_IRQn);
 
     /* DMA1_Stream3_IRQn interrupt configuration */
-    HAL_NVIC_SetPriority(DMA1_Stream3_IRQn, 5, 0);
+    HAL_NVIC_SetPriority(DMA1_Stream3_IRQn, 4, 0);
     HAL_NVIC_EnableIRQ(DMA1_Stream3_IRQn);    
   }
 }

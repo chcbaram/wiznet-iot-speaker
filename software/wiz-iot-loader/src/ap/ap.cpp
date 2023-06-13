@@ -17,30 +17,6 @@ enum
   MODE_DOWN
 };
 
-enum
-{
-  ARG_OPTION_PORT = (1<<0),
-  ARG_OPTION_BAUD = (1<<1),
-  ARG_OPTION_FILE = (1<<2),
-  ARG_OPTION_RUN  = (1<<3),
-  ARG_OPTION_ADDR = (1<<4),
-};
-
-
-typedef struct
-{
-  uint8_t mode;
-  bool    is_udp;
-  bool    is_audio;
-  uint32_t arg_bits;
-  char     port_str[128];
-  uint32_t port_baud;
-  char     file_str[128];
-  bool     run_fw;
-
-  uint32_t tx_block_len;
-} arg_option_t;
-
 
 
 arg_option_t arg_option;
@@ -80,7 +56,7 @@ void apMain(int argc, char *argv[])
 
   if (arg_option.is_audio)
   {
-    audioMain(argc, argv);
+    audioMain(&arg_option);
   }
   else
   {
@@ -102,7 +78,7 @@ bool apGetOption(int argc, char *argv[])
   arg_option.tx_block_len = 256;
 
 
-  while((opt = getopt(argc, argv, "m:hcp:b:f:a:rv:l")) != -1)
+  while((opt = getopt(argc, argv, "m:t:hcp:b:f:a:rv:l")) != -1)
   {
     switch(opt)
     {
@@ -131,6 +107,19 @@ bool apGetOption(int argc, char *argv[])
 
       case 'c':
         arg_option.mode = MODE_CLI;
+        break;
+
+      case 't':
+        if (strncmp(argv[optind-1], "sai", 3) == 0)
+        {
+          arg_option.type = 1;
+          logPrintf("-t sai\n");
+        }
+        else
+        {
+          arg_option.type = 0;
+          logPrintf("-t i2s\n");
+        }        
         break;
 
       case 'p':

@@ -7,6 +7,7 @@
 
 
 bool cmdAudioInit(void);
+bool cmdAudioIsBusy(void);
 bool cmdAudioProcess(cmd_t *p_cmd);
 
 

@@ -76,7 +76,14 @@ void lcdUpdate(void)
   static uint32_t pre_time = 0;
   static uint8_t  index = 0;
   wiznet_info_t net_info;
+  bool is_busy = false;
 
+
+  is_busy |= cmdAudioIsBusy();
+  if (is_busy)
+  {
+    return;
+  }
 
   if (lcdDrawAvailable() && millis()-pre_time >= 100)
   {

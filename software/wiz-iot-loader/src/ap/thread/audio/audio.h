@@ -7,7 +7,7 @@
 
 
 
-void audioMain(int argc, char *argv[]);
+void audioMain(arg_option_t *args);
 void audioDeInit(void);
 
 #endif
