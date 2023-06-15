@@ -25,9 +25,10 @@ class MainWindow(QMainWindow):
 def main():
   app = QApplication(sys.argv)
 
-  #QFontDatabase.addApplicationFont('data/fonts/D2Coding-Ver1.3.2-20180524.ttf')    
+  # QFontDatabase.addApplicationFont('data/font/D2Coding-Ver1.3.2-20180524.ttf')    
   #app.setFont(QFont('Neo둥근모 Code', 14))    
   # app.setFont(QFont('Monospace', 14))
+  # app.setFont(QFont('D2Coding', 14))
 
 
 

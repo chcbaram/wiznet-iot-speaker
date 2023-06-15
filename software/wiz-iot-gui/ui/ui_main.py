@@ -26,6 +26,9 @@ class Ui_MainWindow(object):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
         MainWindow.resize(852, 560)
+        font = QFont()
+        font.setPointSize(14)
+        MainWindow.setFont(font)
         self.actionForce_Exit = QAction(MainWindow)
         self.actionForce_Exit.setObjectName(u"actionForce_Exit")
         self.actionClear = QAction(MainWindow)
