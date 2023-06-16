@@ -43,6 +43,7 @@ void audioMain(arg_option_t *args)
 
   char *file_name;
   char *file_path;
+  uint8_t *file_buf;
   int32_t file_size;
   int32_t file_index;
   FILE *fp;
@@ -72,16 +73,30 @@ void audioMain(arg_option_t *args)
   logPrintf("FileSize      : %d KB\n", file_size/1024);
   logPrintf("\n");
 
+  file_buf = (uint8_t *)malloc(file_size);
+  if (file_buf == NULL)
+  {
+    logPrintf("malloc fail %d\n", file_size);
+    return;
+  }
+  logPrintf("malloc()\n");
 
   //-- File Open
   //
   fp = fopen(file_path, "r");
   if (fp == NULL)
   {
+    free(file_buf);
     logPrintf("fopen fail : %s\n", file_path);
     return;
   }  
-  fread(&header, sizeof(wavfile_header_t), 1, fp);
+
+
+  file_index = 0;
+  fread(file_buf, 1, file_size, fp);
+  fclose(fp);
+
+  memcpy(&header, &file_buf[file_index], sizeof(wavfile_header_t));
 
   logPrintf("ChunkSize     : %d\n", header.ChunkSize);
   logPrintf("Format        : %c%c%c%c\n", header.Format[0], header.Format[1], header.Format[2], header.Format[3]);
@@ -98,8 +113,7 @@ void audioMain(arg_option_t *args)
 
   int16_t buf_frame[4096];
 
-  fseek(fp, sizeof(wavfile_header_t) + 1024, SEEK_SET);
-  file_index = sizeof(wavfile_header_t) + 1024;
+  file_index += 1024;
 
   uint32_t ready_cnt;
   uint16_t err_ret;
@@ -142,14 +156,13 @@ void audioMain(arg_option_t *args)
       r_len = constrain(ready_cnt, 0, 256);
       r_len = r_len / 2;
 
-      len = fread(buf_frame, 1, r_len * 2 * header.NumChannels, fp);
-
-      if (len != r_len*2*header.NumChannels)
+      len = constrain((file_size-file_index), 0, r_len * 2 * header.NumChannels);
+      if (len == 0)
       {
-        logPrintf("r_len : %d\n", r_len);
-        logPrintf("len : %d, %d\n", len, r_len*2*header.NumChannels);
+        logPrintf("File End\n");
         break;
       }
+      memcpy(buf_frame, &file_buf[file_index], len);
       file_index += len;
 
       float percent;
@@ -184,9 +197,11 @@ void audioMain(arg_option_t *args)
       }
     }
   }
-  fclose(fp);
 
   audioCmdEnd(100);
+
+  free(file_buf);
+  logPrintf("free()\n");
 
   is_init = true;
   return;
