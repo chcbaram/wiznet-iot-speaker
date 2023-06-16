@@ -1,1 +1,3 @@
 *.pyc
+firmware/wiznet-iot-speaker-boot/build/
+software/wiz-iot-loader/build/

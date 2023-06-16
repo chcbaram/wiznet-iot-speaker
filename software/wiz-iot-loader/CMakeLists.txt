@@ -55,6 +55,13 @@ target_compile_options(${EXECUTABLE} PRIVATE
   -g3
   )
 
+if (MSVC OR MSYS OR MINGW OR WIN32)
+target_link_libraries(${EXECUTABLE} 
+  wsock32 
+  ws2_32
+  )
+endif()
+
 # Linker options
 target_link_options(${EXECUTABLE} PRIVATE
   

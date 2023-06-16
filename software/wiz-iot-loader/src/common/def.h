@@ -19,6 +19,12 @@
 #include <unistd.h>
 
 #if defined (__WIN32__) || (__WIN64__)
+
+// Windows
+#ifndef _WINSOCKAPI_
+#include <winsock2.h>
+#endif
+
 #include <conio.h>
 #include <Windows.h>
 #endif
@@ -39,14 +45,14 @@
 
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
 
-#ifndef max
-#define max(a,b) (((a) > (b)) ? (a) : (b))
-#define min(a,b) (((a) < (b)) ? (a) : (b))
+#ifndef cmax
+#define cmax(a,b) (((a) > (b)) ? (a) : (b))
+#define cmin(a,b) (((a) < (b)) ? (a) : (b))
 #endif
 
 
-#ifndef map
-#define map(value, in_min, in_max, out_min, out_max) ((value - in_min) * (out_max - out_min) / (in_max - in_min) + out_min)
+#ifndef cmap
+#define cmap(value, in_min, in_max, out_min, out_max) ((value - in_min) * (out_max - out_min) / (in_max - in_min) + out_min)
 #endif
 
 
