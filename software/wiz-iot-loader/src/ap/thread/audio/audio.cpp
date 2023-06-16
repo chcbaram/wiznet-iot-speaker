@@ -23,7 +23,7 @@ typedef struct
 static uint16_t audioCmdBegin(audio_begin_t *p_data, uint32_t timeout);
 static uint16_t audioCmdEnd(uint32_t timeout);
 static uint16_t audioCmdReady(uint32_t *p_data, uint32_t timeout);
-static uint16_t audioCmdWrite(void *p_data, uint32_t length, uint32_t timeout);
+// static uint16_t audioCmdWrite(void *p_data, uint32_t length, uint32_t timeout);
 static uint16_t audioCmdWriteNoResp(void *p_data, uint32_t length);
 
 static char *getFileNameFromPath(char *path );
@@ -166,7 +166,7 @@ void audioMain(arg_option_t *args)
 
     // if (ready_cnt > 0)
     w_len = 0;
-    while(w_len < ready_cnt)
+    while(w_len < (int)ready_cnt)
     {
       int r_len;
 

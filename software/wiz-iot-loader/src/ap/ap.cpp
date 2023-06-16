@@ -35,7 +35,7 @@ uint32_t getFileCrc(char *file_name);
 
 void apInit(void)
 {
-  logPrintf("WIZ-IOT-LOADER V230606R1\n\n");
+  logPrintf("WIZ-IOT-LOADER V230616R1\n\n");
 
   arg_option.mode = MODE_DOWN;
   arg_option.is_udp = false;
