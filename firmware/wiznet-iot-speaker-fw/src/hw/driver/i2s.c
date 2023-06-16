@@ -116,7 +116,30 @@ bool i2sSetSampleRate(uint32_t freq)
 {
   bool ret = true;
   uint32_t frame_len;
+  const uint32_t freq_tbl[7] = 
+  {
+    I2S_AUDIOFREQ_48K,  
+    I2S_AUDIOFREQ_44K,
+    I2S_AUDIOFREQ_32K,
+    I2S_AUDIOFREQ_22K,
+    I2S_AUDIOFREQ_16K,
+    I2S_AUDIOFREQ_11K,
+    I2S_AUDIOFREQ_8K,
+  };
 
+  ret = false;
+  for (int i=0; i<7; i++)
+  {
+    if (freq_tbl[i] == freq)
+    {
+      ret = true;
+      break;
+    }
+  }
+  if (ret != true)
+  {
+    return false;
+  }
 
   i2sStop();
   delay(10);
@@ -138,6 +161,11 @@ bool i2sSetSampleRate(uint32_t freq)
   gpioPinWrite(_PIN_GPIO_SPK_EN, _DEF_HIGH);
 
   return ret;
+}
+
+uint32_t i2sGetSampleRate(void)
+{
+  return i2s_sample_rate;
 }
 
 bool i2sStart(void)

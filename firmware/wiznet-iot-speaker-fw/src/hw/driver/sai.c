@@ -85,7 +85,30 @@ bool saiSetSampleRate(uint32_t freq)
 {
   bool ret = true;
   uint32_t frame_len;
+  const uint32_t freq_tbl[7] = 
+  {
+    SAI_AUDIO_FREQUENCY_48K,  
+    SAI_AUDIO_FREQUENCY_44K,
+    SAI_AUDIO_FREQUENCY_32K,
+    SAI_AUDIO_FREQUENCY_22K,
+    SAI_AUDIO_FREQUENCY_16K,
+    SAI_AUDIO_FREQUENCY_11K,
+    SAI_AUDIO_FREQUENCY_8K,
+  };
 
+  ret = false;
+  for (int i=0; i<7; i++)
+  {
+    if (freq_tbl[i] == freq)
+    {
+      ret = true;
+      break;
+    }
+  }
+  if (ret != true)
+  {
+    return false;
+  }
 
   saiStop();
   delay(10);
@@ -96,13 +119,21 @@ bool saiSetSampleRate(uint32_t freq)
 
 
   hsai_BlockA1.Init.AudioFrequency  = freq;
+  HAL_SAI_MspInit(&hsai_BlockA1);
   if (HAL_SAI_Init(&hsai_BlockA1) != HAL_OK)
   {
     ret = false;
   }
+  HAL_SAI_MspInit(&hsai_BlockA1);
+
   saiStart();
 
   return ret;
+}
+
+uint32_t saiGetSampleRate(void)
+{
+  return sai_sample_rate;
 }
 
 bool saiStart(void)

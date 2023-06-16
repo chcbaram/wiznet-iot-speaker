@@ -8,6 +8,8 @@
 #define AUDIO_CMD_END               0x0022
 #define AUDIO_CMD_READY             0x0023
 #define AUDIO_CMD_WRITE             0x0024
+#define AUDIO_CMD_WRITE_NO_RESP     0x0025
+
 
 typedef struct
 {
@@ -22,6 +24,8 @@ static uint16_t audioCmdBegin(audio_begin_t *p_data, uint32_t timeout);
 static uint16_t audioCmdEnd(uint32_t timeout);
 static uint16_t audioCmdReady(uint32_t *p_data, uint32_t timeout);
 static uint16_t audioCmdWrite(void *p_data, uint32_t length, uint32_t timeout);
+static uint16_t audioCmdWriteNoResp(void *p_data, uint32_t length);
+
 static char *getFileNameFromPath(char *path );
 static int32_t getFileSize(char *file_name);
 
@@ -117,6 +121,8 @@ void audioMain(arg_option_t *args)
 
   uint32_t ready_cnt;
   uint16_t err_ret;
+  bool is_begin = true;
+  bool is_end = false;
 
 
   // audioBegin()
@@ -124,14 +130,21 @@ void audioMain(arg_option_t *args)
   audio_begin.hw_type = args->type;
   strncpy(audio_begin.file_name, file_name, 128);
   audio_begin.file_size = file_size;
+  audio_begin.sample_rate = header.SampleRate;
   
-  audioCmdBegin(&audio_begin, 100);
+  err_ret = audioCmdBegin(&audio_begin, 100);
+  if (err_ret != CMD_OK)
+  {
+    logPrintf("audioCmdBegin()\n  err 0x%04X\n", err_ret);
+    is_begin = false;
+  }
 
 
-  while(uartAvailable(_DEF_UART1) == 0)
+  while(uartAvailable(_DEF_UART1) == 0 && is_begin && is_end == false)
   {
     int len;
     bool ready_ret;
+    int w_len;
 
     ready_ret = false;
     ready_cnt = 0;
@@ -149,17 +162,24 @@ void audioMain(arg_option_t *args)
       break;
     }
 
-    if (ready_cnt > 0)
+    // ready_cnt = constrain(ready_cnt, 0, 1024);
+
+    // if (ready_cnt > 0)
+    w_len = 0;
+    while(w_len < ready_cnt)
     {
       int r_len;
 
-      r_len = constrain(ready_cnt, 0, 256);
+      r_len = constrain(ready_cnt, 0, 700);
       r_len = r_len / 2;
+
+      w_len += (r_len * 2);
 
       len = constrain((file_size-file_index), 0, r_len * 2 * header.NumChannels);
       if (len == 0)
       {
         logPrintf("File End\n");
+        is_end = true;
         break;
       }
       memcpy(buf_frame, &file_buf[file_index], len);
@@ -169,7 +189,7 @@ void audioMain(arg_option_t *args)
 
       percent = (float)file_index * 100. / (float)file_size;
 
-      logPrintf("Play          : %3.2f%%\r", percent);
+      logPrintf("Play          : %3.2f%%, %d   \r", percent, ready_cnt);
 
       int16_t buf_data[r_len*2 + 2];
 
@@ -189,7 +209,8 @@ void audioMain(arg_option_t *args)
           buf_data[i*2 + 1 + 2] = buf_frame[i] * volume / 100;;
         }
       }
-      err_ret = audioCmdWrite(buf_data, r_len * 2 * 2 + 4, 500);
+      // err_ret = audioCmdWrite(buf_data, r_len * 2 * 2 + 4, 500);
+      err_ret = audioCmdWriteNoResp(buf_data, r_len * 2 * 2 + 4);
       if (err_ret != CMD_OK)
       {
         logPrintf("audioCmdWrite() Fail\n");
@@ -267,6 +288,16 @@ uint16_t audioCmdWrite(void *p_data, uint32_t length, uint32_t timeout)
     }
   } 
   ret = p_cmd->packet.err_code;
+
+  return ret;
+}
+
+uint16_t audioCmdWriteNoResp(void *p_data, uint32_t length)
+{
+  uint16_t ret = CMD_OK;
+  cmd_t *p_cmd = &cmd;
+
+  cmdSendCmd(p_cmd, AUDIO_CMD_WRITE_NO_RESP, (uint8_t *)p_data, length);
 
   return ret;
 }

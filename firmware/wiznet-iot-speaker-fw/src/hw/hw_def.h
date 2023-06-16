@@ -6,7 +6,7 @@
 #include "bsp.h"
 
 
-#define _DEF_FIRMWATRE_VERSION    "V230604R1"
+#define _DEF_FIRMWATRE_VERSION    "V230616R1"
 #define _DEF_BOARD_NAME           "IOT-SPEAKER-FW"
 
 
@@ -85,8 +85,8 @@
 #define      HW_LCD_HEIGHT          240
 
 #define _USE_HW_MIXER
-#define      HW_MIXER_MAX_CH        8
-#define      HW_MIXER_MAX_BUF_LEN   (48*2*4*4) // 48Khz * Stereo * 4ms * 2
+#define      HW_MIXER_MAX_CH        4
+#define      HW_MIXER_MAX_BUF_LEN   (48*2*4*8) // 48Khz * Stereo * 4ms * 2
 
 #define _USE_HW_USB
 #define _USE_HW_CDC

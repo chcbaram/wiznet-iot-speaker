@@ -28,6 +28,7 @@
 #define ERR_CMD_RX_TIMEOUT            0x0022
 #define ERR_CMD_NO_CMD                0x0023
 
+#define ERR_CMD_AUDIO_RATE            0x0030
 
 
 #endif 

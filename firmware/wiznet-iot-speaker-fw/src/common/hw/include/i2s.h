@@ -23,7 +23,7 @@ bool     i2sPlayNote(int8_t octave, int8_t note, uint16_t volume, uint32_t time_
 bool     i2sPlayBeep(uint32_t freq_hz, uint16_t volume, uint32_t time_ms);
 uint32_t i2sGetFrameSize(void);
 bool     i2sSetSampleRate(uint32_t sample_rate);
-
+uint32_t i2sGetSampleRate(void);
 
 #endif
 
