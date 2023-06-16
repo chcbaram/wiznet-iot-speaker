@@ -25,8 +25,10 @@ class MainWindow(QMainWindow):
 def main():
   app = QApplication(sys.argv)
 
-  QFontDatabase.addApplicationFont('data/font/neodgm_code.ttf')
-  app.setFont(QFont('Neo둥근모 Code', 14))  
+
+  fontpath = os.path.abspath("data/font/neodgm_code.ttf")
+  QFontDatabase.addApplicationFont(fontpath)
+  app.setFont(QFont("NeoDunggeunmo Code", 14))
 
 
   window = MainWindow()
