@@ -31,7 +31,7 @@ static bool    is_detected = false;
 #ifdef _USE_HW_RTOS
 static SemaphoreHandle_t mutex_lock = NULL;
 #endif
-static uint8_t main_volume = 60;
+static uint8_t main_volume = 75;
 
 
 

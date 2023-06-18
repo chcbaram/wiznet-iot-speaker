@@ -33,8 +33,20 @@ bool mixerInit(mixer_t *p_mixer)
     p_mixer->buf[i].out = 0;
     p_mixer->buf[i].length = MIXER_MAX_BUF_LEN;
   }
+  p_mixer->volume = 100;
 
   return true;
+}
+
+bool mixerSetVolume(mixer_t *p_mixer, int32_t volume)
+{
+  p_mixer->volume = constrain(volume, 0, 100);
+  return true;
+}
+
+int32_t mixerGetVolume(mixer_t *p_mixer)
+{
+  return p_mixer->volume;
 }
 
 bool mixerWrite(mixer_t *p_mixer, uint8_t ch, int16_t *p_data, uint32_t length)
@@ -58,6 +70,7 @@ bool mixerWrite(mixer_t *p_mixer, uint8_t ch, int16_t *p_data, uint32_t length)
 
     if (next_index != p_mixer->buf[ch].out)
     {
+      // p_mixer->buf[ch].buf[index] = p_data[i] * p_mixer->volume / 100;
       p_mixer->buf[ch].buf[index] = p_data[i];
       p_mixer->buf[ch].in         = next_index;
     }
@@ -107,7 +120,7 @@ bool mixerRead(mixer_t *p_mixer, int16_t *p_data, uint32_t length)
       mixer_out = mixerSamples(mixer_out, sample);
     }
 
-    p_data[i] = mixer_out;
+    p_data[i] = mixer_out * p_mixer->volume / 100;;
   }
 
   return true;

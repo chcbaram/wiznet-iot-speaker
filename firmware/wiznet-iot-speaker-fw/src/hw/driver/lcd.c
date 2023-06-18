@@ -55,6 +55,18 @@ typedef struct
   uint8_t rotation_mode;
 } lcd_cfg_t;
 
+
+static void disHanFont(int x, int y, han_font_t *FontPtr, uint16_t textcolor);
+static void disEngFont(int x, int y, char ch, lcd_font_t *font, uint16_t textcolor);
+static void lcdDrawLineBuffer(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color, lcd_pixel_t *line);
+static bool lcdLoadCfg(void);
+static bool lcdSaveCfg(void);
+
+#ifdef _USE_HW_CLI
+static void cliLcd(cli_args_t *args);
+#endif
+
+
 static lcd_driver_t lcd;
 
 
@@ -89,21 +101,13 @@ static uint16_t __attribute__((aligned(64))) font_dst_buffer[LCD_FONT_RESIZE_WID
 
 static lcd_font_t *font_tbl[LCD_FONT_MAX] = { &font_07x10, &font_11x18, &font_16x26, &font_hangul};
 static lcd_cfg_t lcd_cfg;
+static void (*draw_callback)(void) = NULL;
 
 #if HW_LCD_LOGO == 1
 LVGL_IMG_DEF(logo_img);
 #endif
 
-static void disHanFont(int x, int y, han_font_t *FontPtr, uint16_t textcolor);
-static void disEngFont(int x, int y, char ch, lcd_font_t *font, uint16_t textcolor);
-static void lcdDrawLineBuffer(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color, lcd_pixel_t *line);
-static bool lcdLoadCfg(void);
-static bool lcdSaveCfg(void);
 
-
-#ifdef _USE_HW_CLI
-static void cliLcd(cli_args_t *args);
-#endif
 
 void transferDoneISR(void)
 {
@@ -161,6 +165,11 @@ bool lcdInit(void)
 #endif
 
   return true;
+}
+
+void lcdSetCallbackDraw(void (*func)(void))
+{
+  draw_callback = func;
 }
 
 bool lcdLoadCfg(void)
@@ -504,6 +513,10 @@ bool lcdRequestDraw(void)
     return false;
   }
 
+  if (draw_callback != NULL)
+  {
+    draw_callback();
+  }
 
   lcd.setWindow(0, 0, LCD_WIDTH-1, LCD_HEIGHT-1);
 

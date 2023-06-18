@@ -29,12 +29,12 @@ typedef struct
   uint32_t length;
   uint32_t in;
   uint32_t out;
-
   int16_t  buf[MIXER_MAX_BUF_LEN];
 } mixer_buf_t;
 
 typedef struct
 {
+  int32_t volume;
   mixer_buf_t buf[MIXER_MAX_CH];
 } mixer_t;
 
@@ -43,6 +43,8 @@ bool mixerInit(mixer_t *p_mixer);
 bool mixerWrite(mixer_t *p_mixer, uint8_t ch, int16_t *p_data, uint32_t length);
 bool mixerRead(mixer_t *p_mixer, int16_t *p_data, uint32_t length);
 bool mixerIsEmpty(mixer_t *p_mixer, uint8_t ch);
+bool mixerSetVolume(mixer_t *p_mixer, int32_t volume);
+int32_t mixerGetVolume(mixer_t *p_mixer);
 
 uint32_t mixerAvailable(mixer_t *p_mixer);
 uint32_t mixerAvailableForWrite(mixer_t *p_mixer, uint8_t ch);

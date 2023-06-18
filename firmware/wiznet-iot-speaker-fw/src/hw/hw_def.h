@@ -119,6 +119,11 @@
 #define _PIN_GPIO_LCD_RST           8
 #define _PIN_GPIO_LCD_DC            9
 
+#define _BTN_A                      0   
+#define _BTN_B                      1   
+#define _BTN_C                      2   
+#define _BTN_ENC_L                  3   
+#define _BTN_ENC_R                  4   
 
 
 #define FLASH_SIZE_TAG              0x400

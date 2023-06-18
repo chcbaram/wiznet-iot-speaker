@@ -13,9 +13,12 @@
 #include "buzzer.h"
 #include "files.h"
 #include "mixer.h"
+#include "nvs.h"
 
 
 #ifdef _USE_HW_I2S
+
+#define I2S_CFG_NAME "cfg.i2s"
 
 #if HW_I2S_LCD > 0
 #include "lcd.h"
@@ -35,6 +38,11 @@ typedef struct
 
 } i2s_cli_t;
 
+typedef struct
+{
+  int16_t volume;
+} i2s_cfg_t;
+
 static void drawBlock(int16_t bx, int16_t by, uint16_t color);
 static bool lcdUpdate(i2s_cli_t *p_args);
 #endif
@@ -52,7 +60,7 @@ static void cliI2s(cli_args_t *args);
 
 static bool is_init = false;
 static bool is_started = false;
-
+static bool is_busy = false;
 static uint32_t i2s_sample_rate = I2S_SAMPLERATE_HZ;
 
 static volatile uint32_t i2s_frame_cur_i = 0;
@@ -60,8 +68,9 @@ static volatile bool     i2s_frame_update = false;
 static int16_t  i2s_frame_buf[2][I2S_BUF_FRAME_LEN];
 const int16_t   i2s_frame_buf_zero[I2S_BUF_FRAME_LEN] = {0, };
 static uint32_t i2s_frame_len = 0;
-
+static int16_t  i2s_volume = 100;
 static mixer_t   mixer;
+static i2s_cfg_t i2s_cfg;
 
 static I2S_HandleTypeDef hi2s1;
 static DMA_HandleTypeDef hdma_spi1_tx;
@@ -95,6 +104,7 @@ bool i2sInit(void)
   i2s_frame_len = (i2s_sample_rate * 2 * I2S_BUF_MS) / 1000;
 
   mixerInit(&mixer);
+  i2sCfgLoad();
 
   i2sStart();
 
@@ -110,6 +120,40 @@ bool i2sInit(void)
 #endif
 
   return ret;
+}
+
+bool i2sCfgLoad(void)
+{
+  bool ret = true;
+
+  if (nvsGet(I2S_CFG_NAME, &i2s_cfg, sizeof(i2s_cfg)) == true)
+  {
+    i2s_volume = i2s_cfg.volume;
+  }
+  else
+  {
+    i2s_cfg.volume = i2s_volume;
+    ret = nvsSet(I2S_CFG_NAME, &i2s_cfg, sizeof(i2s_cfg));
+    logPrintf("[NG] i2sCfgLoad()\n");
+  }
+
+  i2sSetVolume(i2s_cfg.volume);
+  return ret;
+}
+
+bool i2sCfgSave(void)
+{
+  bool ret = true;
+
+  i2s_cfg.volume = i2s_volume;
+  ret = nvsSet(I2S_CFG_NAME, &i2s_cfg, sizeof(i2s_cfg));
+
+  return ret;
+}
+
+bool i2sIsBusy(void)
+{
+  return is_busy;
 }
 
 bool i2sSetSampleRate(uint32_t freq)
@@ -345,6 +389,20 @@ bool i2sPlayBeepLcd(i2s_cli_t *p_i2s_cli, uint32_t freq_hz, uint16_t volume, uin
 }
 #endif
 
+int16_t i2sGetVolume(void)
+{
+  return i2s_volume;
+}
+
+bool i2sSetVolume(int16_t volume)
+{
+  volume = constrain(volume, 0, 100);
+  i2s_volume = volume;
+
+  mixerSetVolume(&mixer, i2s_volume);
+  return true;
+}
+
 void HAL_I2S_TxCpltCallback(I2S_HandleTypeDef *hi2s)
 {
   if (is_started != true)
@@ -357,10 +415,12 @@ void HAL_I2S_TxCpltCallback(I2S_HandleTypeDef *hi2s)
     HAL_I2S_Transmit_DMA(hi2s, (uint16_t *)i2s_frame_buf[i2s_frame_cur_i], i2s_frame_len);
     i2s_frame_cur_i ^= 1;
     i2s_frame_update = false;
+    is_busy = true;
   }
   else
   {
     HAL_I2S_Transmit_DMA(hi2s, (uint16_t *)i2s_frame_buf_zero, i2s_frame_len);
+    is_busy = false;
   }
 }
 

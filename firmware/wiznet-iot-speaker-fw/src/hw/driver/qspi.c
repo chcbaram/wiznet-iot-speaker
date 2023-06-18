@@ -219,7 +219,7 @@ bool qspiErase(uint32_t addr, uint32_t length)
 
   for (i=block_begin; i<=block_end; i++)
   {
-    ret = qspiEraseBlock(block_size*i);
+    ret = qspiEraseSector(block_size*i);
     if (ret == false)
     {
       break;
@@ -557,7 +557,7 @@ uint8_t BSP_QSPI_Erase_Block(uint32_t BlockAddress)
   s_command.InstructionMode    = HAL_OSPI_INSTRUCTION_1_LINE;
   s_command.InstructionDtrMode = HAL_OSPI_INSTRUCTION_DTR_DISABLE;
   s_command.InstructionSize    = HAL_OSPI_INSTRUCTION_8_BITS;
-  s_command.Instruction        = SECTOR_ERASE_CMD;
+  s_command.Instruction        = SUBSECTOR_ERASE_CMD;
   
   s_command.AddressMode        = HAL_OSPI_ADDRESS_1_LINE;
   s_command.AddressDtrMode     = HAL_OSPI_ADDRESS_DTR_DISABLE;

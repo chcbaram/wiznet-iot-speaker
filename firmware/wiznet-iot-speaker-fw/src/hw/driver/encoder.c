@@ -83,6 +83,8 @@ bool encoderClearCount(uint8_t ch)
 {
   if (ch >= ENCODER_MAX_CH) return false;
 
+  encoder_tbl[ch].count = 0;
+
   return true;
 }
 
@@ -113,7 +115,7 @@ void encoderISR(void *arg)
     if ((p_enc->tmp_b & 0x07) == 0x07) p_enc->cur_b = _DEF_HIGH;
     if ((p_enc->tmp_b & 0x07) == 0x00) p_enc->cur_b = _DEF_LOW;
 
-    if (p_enc->tmp_cnt >= 8)
+    if (p_enc->tmp_cnt >= 4)
     {
       if (p_enc->pre_a == _DEF_LOW && p_enc->cur_a == _DEF_HIGH)
       {

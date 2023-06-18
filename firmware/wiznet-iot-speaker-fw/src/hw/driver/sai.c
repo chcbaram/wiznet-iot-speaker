@@ -5,15 +5,23 @@
 #include "buzzer.h"
 #include "files.h"
 #include "mixer.h"
+#include "nvs.h"
 
 
 #ifdef _USE_HW_SAI
 
+#define SAI_CFG_NAME "cfg.sai"
 
 #define SAI_SAMPLERATE_HZ       16000
 #define SAI_BUF_MS              (4)
 #define SAI_BUF_LEN             (8*1024)
 #define SAI_BUF_FRAME_LEN       ((48000 * 2 * SAI_BUF_MS) / 1000)  // 48Khz, Stereo, 4ms
+
+
+typedef struct
+{
+  int16_t volume;
+} sai_cfg_t;
 
 
 #ifdef _USE_HW_CLI
@@ -22,6 +30,7 @@ static void cliSai(cli_args_t *args);
 
 static bool is_init = false;
 static bool is_started = false;
+static bool is_busy = false;
 
 static uint32_t sai_sample_rate = SAI_SAMPLERATE_HZ;
 
@@ -32,6 +41,8 @@ const int16_t   sai_frame_buf_zero[SAI_BUF_FRAME_LEN] = {0, };
 static uint32_t sai_frame_len = 0;
 
 static mixer_t   mixer;
+static int16_t   sai_volume = 100;
+static sai_cfg_t sai_cfg;
 
 static SAI_HandleTypeDef hsai_BlockA1;
 static DMA_HandleTypeDef hdma_sai1_a;
@@ -65,6 +76,7 @@ bool saiInit(void)
   sai_frame_len = (sai_sample_rate * 2 * SAI_BUF_MS) / 1000;
   
   mixerInit(&mixer);
+  saiCfgLoad();
 
   saiStart();
 
@@ -79,6 +91,40 @@ bool saiInit(void)
 #endif
 
   return ret;
+}
+
+bool saiCfgLoad(void)
+{
+  bool ret = true;
+
+  if (nvsGet(SAI_CFG_NAME, &sai_cfg, sizeof(sai_cfg)) == true)
+  {
+    sai_volume = sai_cfg.volume;
+  }
+  else
+  {
+    sai_cfg.volume = sai_volume;
+    ret = nvsSet(SAI_CFG_NAME, &sai_cfg, sizeof(sai_cfg));
+    logPrintf("[NG] saiCfgLoad()\n");
+  }
+
+  saiSetVolume(sai_cfg.volume);
+  return ret;
+}
+
+bool saiCfgSave(void)
+{
+  bool ret = true;
+
+  sai_cfg.volume = sai_volume;
+  ret = nvsSet(SAI_CFG_NAME, &sai_cfg, sizeof(sai_cfg));
+
+  return ret;
+}
+
+bool saiIsBusy(void)
+{
+  return is_busy;
 }
 
 bool saiSetSampleRate(uint32_t freq)
@@ -251,6 +297,18 @@ bool saiPlayBeep(uint32_t freq_hz, uint16_t volume, uint32_t time_ms)
   return true;
 }
 
+int16_t saiGetVolume(void)
+{
+  return sai_volume;
+}
+
+bool saiSetVolume(int16_t volume)
+{
+  volume = constrain(volume, 0, 100);
+  sai_volume = volume;
+  mixerSetVolume(&mixer, sai_volume);
+  return true;
+}
 
 void HAL_SAI_TxCpltCallback(SAI_HandleTypeDef *hi2s)
 {
@@ -264,10 +322,12 @@ void HAL_SAI_TxCpltCallback(SAI_HandleTypeDef *hi2s)
     HAL_SAI_Transmit_DMA(hi2s, (uint8_t *)sai_frame_buf[sai_frame_cur_i], sai_frame_len);
     sai_frame_cur_i ^= 1;
     sai_frame_update = false;
+    is_busy = true;
   }
   else
   {
     HAL_SAI_Transmit_DMA(hi2s, (uint8_t *)sai_frame_buf_zero, sai_frame_len);
+    is_busy = false;
   }
 }
 

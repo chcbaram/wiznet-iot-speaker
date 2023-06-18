@@ -127,7 +127,7 @@ static void cmdAudioReady(cmd_t *p_cmd)
       break;
 
     case AUDIO_TYPE_SAI:
-      data.u32D = saiAvailableForWrite(i2s_ch);
+      data.u32D = saiAvailableForWrite(sai_ch);
       break;
   }
 
@@ -152,7 +152,7 @@ static void cmdAudioWrite(cmd_t *p_cmd, bool resp)
       break;
 
     case AUDIO_TYPE_SAI:
-      saiWrite(i2s_ch, (int16_t *)p_buf, length);
+      saiWrite(sai_ch, (int16_t *)p_buf, length);
       break;
   }
 
@@ -273,6 +273,7 @@ void cmdAudioUpdate(cmd_t *p_cmd)
     STATE_END,
   };
   static uint8_t state = STATE_IDLE;
+  static uint32_t pre_time;
 
 
   switch(state)
@@ -281,6 +282,7 @@ void cmdAudioUpdate(cmd_t *p_cmd)
       if (is_begin == true)
       {
         state = STATE_BEGIN;
+        pre_time = millis();
       }
       break;
 
@@ -299,8 +301,10 @@ void cmdAudioUpdate(cmd_t *p_cmd)
 
   if (state == STATE_BEGIN)
   {
-    if (lcdDrawAvailable() && audio_fft.q15_buf_index == FFT_LEN)
+    if (lcdDrawAvailable() && audio_fft.q15_buf_index == FFT_LEN && millis()-pre_time >= 50)
     {
+      pre_time = millis();
+
       lcdClearBuffer(black);
 
       lcdDrawFillRect(0, 0, LCD_WIDTH, 32, white);     

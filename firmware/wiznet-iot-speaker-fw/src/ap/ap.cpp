@@ -1,7 +1,7 @@
 #include "ap.h"
-#include "thread/cmd/cmd_thread.h"
 #include "wiznet/wiznet.h"
-
+#include "cmd/cmd_thread.h"
+#include "osd/osd_thread.h"
 
 
 static void lcdUpdate(void);
@@ -15,6 +15,7 @@ void apInit(void)
   logBoot(false);
 
   cmdThreadInit();
+  osdThreadInit();
 }
 
 void apMain(void)
@@ -65,6 +66,7 @@ void apMain(void)
     sdUpdate();
     wiznetUpdate();
     cmdThreadUpdate();
+    osdThreadUpdate();
     lcdUpdate();
   }
 }
