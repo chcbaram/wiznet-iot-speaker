@@ -116,7 +116,13 @@ void osdThreadISR(void)
     o_y = (lcdGetHeight() - o_h) / 2;
 
 
+    if (buttonEventGetPressed(&btn_event, _BTN_ENC_L))
+    {
+      osd_mode = (osd_mode + 1) % 2;
+      osd_pre_time = millis();
+    }
 
+    
     if (osd_enc_cnt[ENC_R] != osd_enc_pre_cnt[ENC_R])
     {
       int16_t enc_diff;
@@ -144,12 +150,6 @@ void osdThreadISR(void)
       case 1:
         volume = saiGetVolume();
         break;
-    }
-
-    if (buttonEventGetPressed(&btn_event, _BTN_ENC_L))
-    {
-      osd_mode = (osd_mode + 1) % 2;
-      osd_pre_time = millis();
     }
 
 

@@ -273,7 +273,6 @@ void cmdAudioUpdate(cmd_t *p_cmd)
     STATE_END,
   };
   static uint8_t state = STATE_IDLE;
-  static uint32_t pre_time;
 
 
   switch(state)
@@ -282,7 +281,6 @@ void cmdAudioUpdate(cmd_t *p_cmd)
       if (is_begin == true)
       {
         state = STATE_BEGIN;
-        pre_time = millis();
       }
       break;
 
@@ -301,10 +299,8 @@ void cmdAudioUpdate(cmd_t *p_cmd)
 
   if (state == STATE_BEGIN)
   {
-    if (lcdDrawAvailable() && audio_fft.q15_buf_index == FFT_LEN && millis()-pre_time >= 50)
+    if (lcdDrawAvailable() && audio_fft.q15_buf_index == FFT_LEN)
     {
-      pre_time = millis();
-
       lcdClearBuffer(black);
 
       lcdDrawFillRect(0, 0, LCD_WIDTH, 32, white);     
