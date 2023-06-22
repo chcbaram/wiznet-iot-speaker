@@ -121,7 +121,6 @@ bool wiznetSNTP(void)
   return ret;
 }
 
-
 void wiznetPrintInfo(wiz_NetInfo *p_info)
 {
   uint8_t tmp_str[8] = {

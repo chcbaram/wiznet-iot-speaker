@@ -14,6 +14,7 @@ extern "C" {
 #include "wiznet/dhcp/dhcp.h"
 #include "wiznet/dns/dns.h"
 #include "wiznet/sntp/sntp.h"
+#include "wiznet/mqtt/mqtt.h"
 
 
 typedef struct 
@@ -30,6 +31,7 @@ typedef struct
 bool wiznetInit(void);
 bool wiznetDHCP(void);
 bool wiznetSNTP(void);
+bool wiznetMQTT(void);
 void wiznetUpdate(void);
 bool wiznetIsGetIP(void);
 bool wiznetGetInfo(wiznet_info_t *p_info);
