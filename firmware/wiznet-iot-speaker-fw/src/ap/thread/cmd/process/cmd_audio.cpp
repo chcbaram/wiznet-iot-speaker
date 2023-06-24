@@ -157,38 +157,9 @@ static void cmdAudioWrite(cmd_t *p_cmd, bool resp)
 
   p_buf  = (int16_t *)&p_cmd->packet.data[4];
   length = (p_cmd->packet.length - 4) / 2;
-#if 1
+
   qbufferWrite(&audio_q, (uint8_t *)p_buf, length);
-  // logPrintf("rx %d %d\n", length, i2sAvailableForWrite(i2s_ch));
-  // logPrintf("w %d\n", length);
-#else
-  logPrintf("rx %d %d\n", length, i2sAvailableForWrite(i2s_ch));
 
-  switch(audio_type)
-  {
-    case AUDIO_TYPE_I2S:
-      i2sWrite(i2s_ch, (int16_t *)p_buf, length);
-      break;
-
-    case AUDIO_TYPE_SAI:
-      saiWrite(sai_ch, (int16_t *)p_buf, length);
-      break;
-  }
-
-  for (uint32_t i=0; i<length; i+=2)
-  {
-    if (audio_fft.q15_buf_index < FFT_LEN)
-    {
-      audio_fft.buf_q15[audio_fft.q15_buf_index*2 + 0] = p_buf[i];
-      audio_fft.buf_q15[audio_fft.q15_buf_index*2 + 1] = 0;      
-      audio_fft.q15_buf_index++;            
-    }    
-    else
-    {
-      break;
-    }
-  }
-#endif
   if (resp == true)
   {
     cmdSendResp(p_cmd, p_cmd->packet.cmd, CMD_OK, NULL, 0);  
