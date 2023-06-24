@@ -11,6 +11,11 @@
 #define AUDIO_CMD_WRITE_NO_RESP     0x0025
 
 
+
+#define USE_WRITE_RESP              0
+
+
+
 typedef struct
 {
   uint8_t  hw_type;
@@ -23,9 +28,11 @@ typedef struct
 static uint16_t audioCmdBegin(audio_begin_t *p_data, uint32_t timeout);
 static uint16_t audioCmdEnd(uint32_t timeout);
 static uint16_t audioCmdReady(uint32_t *p_data, uint32_t timeout);
-// static uint16_t audioCmdWrite(void *p_data, uint32_t length, uint32_t timeout);
+#if USE_WRITE_RESP == 1
+static uint16_t audioCmdWrite(void *p_data, uint32_t length, uint32_t timeout);
+#else
 static uint16_t audioCmdWriteNoResp(void *p_data, uint32_t length);
-
+#endif
 static char *getFileNameFromPath(char *path );
 static int32_t getFileSize(char *file_name);
 
@@ -162,15 +169,13 @@ void audioMain(arg_option_t *args)
       break;
     }
 
-    // ready_cnt = constrain(ready_cnt, 0, 1024);
 
-    // if (ready_cnt > 0)
     w_len = 0;
     while(w_len < (int)ready_cnt)
     {
       int r_len;
 
-      r_len = constrain(ready_cnt, 0, 700);
+      r_len = constrain((ready_cnt-w_len), 0, 700);
       r_len = r_len / 2;
 
       w_len += (r_len * 2);
@@ -209,8 +214,12 @@ void audioMain(arg_option_t *args)
           buf_data[i*2 + 1 + 2] = buf_frame[i] * volume / 100;;
         }
       }
-      // err_ret = audioCmdWrite(buf_data, r_len * 2 * 2 + 4, 500);
+
+      #if USE_WRITE_RESP == 1
+      err_ret = audioCmdWrite(buf_data, r_len * 2 * 2 + 4, 50);
+      #else
       err_ret = audioCmdWriteNoResp(buf_data, r_len * 2 * 2 + 4);
+      #endif
       if (err_ret != CMD_OK)
       {
         logPrintf("audioCmdWrite() Fail\n");

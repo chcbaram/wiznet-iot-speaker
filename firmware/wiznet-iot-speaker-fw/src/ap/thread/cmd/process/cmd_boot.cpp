@@ -456,8 +456,6 @@ bool cmdBootProcess(cmd_t *p_cmd)
       break;  
   }
 
-  cmdBootUpdate(p_cmd);
-
   return ret;
 }
 

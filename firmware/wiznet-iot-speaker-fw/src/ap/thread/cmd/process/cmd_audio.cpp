@@ -9,6 +9,8 @@
 #define AUDIO_CMD_WRITE_NO_RESP     0x0025
 
 
+#define AUDIO_Q_BUF_LEN (4*1024)
+
 #define FFT_LEN         512
 #define BLOCK_X_CNT     12
 #define BLOCK_Y_CNT     12
@@ -16,7 +18,8 @@
 enum
 {
   AUDIO_TYPE_I2S = 0,
-  AUDIO_TYPE_SAI = 1
+  AUDIO_TYPE_SAI = 1,
+  AUDIO_TYPE_MAX
 };
 
 typedef struct
@@ -30,6 +33,16 @@ typedef struct
 
 typedef struct
 {
+  uint8_t ch;
+
+  bool (*write)(uint8_t ch, int16_t *p_data, uint32_t length);
+  bool (*setSampleRate)(uint32_t freq);
+  uint32_t (*getSampleRate)(void);
+  uint32_t (*availableForWrite)(uint8_t ch);
+} audio_type_t;
+
+typedef struct
+{
   uint32_t pre_time_lcd;
   uint8_t  update_cnt;
   uint16_t q15_buf_index;
@@ -38,24 +51,40 @@ typedef struct
   uint8_t block_target[BLOCK_X_CNT];
   uint8_t block_peak[BLOCK_X_CNT];
   uint8_t block_value[BLOCK_X_CNT];
-
 } fft_t;
 
-static uint8_t audio_type = AUDIO_TYPE_I2S;
-static uint8_t i2s_ch;
-static uint8_t sai_ch;
+static uint8_t audio_hw_type = AUDIO_TYPE_I2S;
 static uint8_t is_begin = false;
 static char     file_name[128];
 static uint32_t file_size  = 0;
 static uint32_t file_index = 0;
 static fft_t    audio_fft;
 
+static int16_t   audio_q_r_buf[AUDIO_Q_BUF_LEN];
+static int16_t   audio_q_w_buf[AUDIO_Q_BUF_LEN];
+static qbuffer_t audio_q;
+
+static audio_type_t audio_type[AUDIO_TYPE_MAX];
+
+
+
 
 
 bool cmdAudioInit(void)
 {
-  i2s_ch = i2sGetEmptyChannel();
-  sai_ch = saiGetEmptyChannel();
+  audio_type[AUDIO_TYPE_I2S].ch = i2sGetEmptyChannel();
+  audio_type[AUDIO_TYPE_I2S].write = i2sWrite;
+  audio_type[AUDIO_TYPE_I2S].setSampleRate = i2sSetSampleRate;
+  audio_type[AUDIO_TYPE_I2S].getSampleRate = i2sGetSampleRate;
+  audio_type[AUDIO_TYPE_I2S].availableForWrite = i2sAvailableForWrite;
+
+  audio_type[AUDIO_TYPE_SAI].ch = saiGetEmptyChannel();
+  audio_type[AUDIO_TYPE_SAI].write = saiWrite;
+  audio_type[AUDIO_TYPE_SAI].setSampleRate = saiSetSampleRate;
+  audio_type[AUDIO_TYPE_SAI].getSampleRate = saiGetSampleRate;
+  audio_type[AUDIO_TYPE_SAI].availableForWrite = saiAvailableForWrite;
+
+  qbufferCreateBySize(&audio_q, (uint8_t *)audio_q_w_buf, 2, AUDIO_Q_BUF_LEN);
   return true;
 }
 
@@ -71,7 +100,7 @@ static void cmdAudioBegin(cmd_t *p_cmd)
   audio_begin_t *p_begin = (audio_begin_t *)p_cmd->packet.data;
 
   is_begin   = true;
-  audio_type = p_begin->hw_type;
+  audio_hw_type = p_begin->hw_type;
   strncpy(file_name, p_begin->file_name, 128);
   file_size = p_begin->file_size;
   file_index = 0;
@@ -88,19 +117,10 @@ static void cmdAudioBegin(cmd_t *p_cmd)
   logPrintf("       name : %s \n", file_name);
   logPrintf("       size : %d \n", file_size);
 
-  if (audio_type == AUDIO_TYPE_I2S)
+
+  if (audio_type[audio_hw_type].setSampleRate(p_begin->sample_rate) != true)
   {
-    if (i2sSetSampleRate(p_begin->sample_rate) != true)
-    {
-      err_code = ERR_CMD_AUDIO_RATE;
-    }
-  }
-  else
-  {
-    if (saiSetSampleRate(p_begin->sample_rate) != true)
-    {
-      err_code = ERR_CMD_AUDIO_RATE;
-    }    
+    err_code = ERR_CMD_AUDIO_RATE;
   }
 
   cmdSendResp(p_cmd, p_cmd->packet.cmd, err_code, NULL, 0);  
@@ -112,6 +132,8 @@ static void cmdAudioEnd(cmd_t *p_cmd)
 
   logPrintf("[  ] AudioEnd()\n");
 
+  qbufferFlush(&audio_q);
+
   cmdSendResp(p_cmd, p_cmd->packet.cmd, CMD_OK, NULL, 0);  
 }
 
@@ -119,17 +141,8 @@ static void cmdAudioReady(cmd_t *p_cmd)
 {
   data_t data;
 
-
-  switch(audio_type)
-  {
-    case AUDIO_TYPE_I2S:
-      data.u32D = i2sAvailableForWrite(i2s_ch);
-      break;
-
-    case AUDIO_TYPE_SAI:
-      data.u32D = saiAvailableForWrite(sai_ch);
-      break;
-  }
+  data.u32D = (AUDIO_Q_BUF_LEN - qbufferAvailable(&audio_q)) - 1;
+  data.u32D = data.u32D - (data.u32D%2);
 
   cmdSendResp(p_cmd, p_cmd->packet.cmd, CMD_OK, data.u8Data, 4);  
 }
@@ -144,6 +157,12 @@ static void cmdAudioWrite(cmd_t *p_cmd, bool resp)
 
   p_buf  = (int16_t *)&p_cmd->packet.data[4];
   length = (p_cmd->packet.length - 4) / 2;
+#if 1
+  qbufferWrite(&audio_q, (uint8_t *)p_buf, length);
+  // logPrintf("rx %d %d\n", length, i2sAvailableForWrite(i2s_ch));
+  // logPrintf("w %d\n", length);
+#else
+  logPrintf("rx %d %d\n", length, i2sAvailableForWrite(i2s_ch));
 
   switch(audio_type)
   {
@@ -169,7 +188,7 @@ static void cmdAudioWrite(cmd_t *p_cmd, bool resp)
       break;
     }
   }
-
+#endif
   if (resp == true)
   {
     cmdSendResp(p_cmd, p_cmd->packet.cmd, CMD_OK, NULL, 0);  
@@ -299,8 +318,37 @@ void cmdAudioUpdate(cmd_t *p_cmd)
 
   if (state == STATE_BEGIN)
   {
-    if (lcdDrawAvailable() && audio_fft.q15_buf_index == FFT_LEN)
+    uint32_t q_len;
+    uint32_t length;
+    int16_t *p_buf = audio_q_r_buf;
+    audio_type_t *p_type = &audio_type[audio_hw_type];
+
+    q_len = qbufferAvailable(&audio_q);
+    length = cmin(q_len, p_type->availableForWrite(p_type->ch));
+    if (length > 0)
     {
+      qbufferRead(&audio_q, (uint8_t *)p_buf, length);
+      p_type->write(p_type->ch, (int16_t *)p_buf, length);
+
+      for (uint32_t i=0; i<length; i+=2)
+      {
+        if (audio_fft.q15_buf_index < FFT_LEN)
+        {
+          audio_fft.buf_q15[audio_fft.q15_buf_index*2 + 0] = p_buf[i];
+          audio_fft.buf_q15[audio_fft.q15_buf_index*2 + 1] = 0;      
+          audio_fft.q15_buf_index++;            
+        }    
+        else
+        {
+          break;
+        }
+      }
+    }
+    
+    if (lcdDrawAvailable() && audio_fft.q15_buf_index == FFT_LEN && millis() - audio_fft.pre_time_lcd >= 50)
+    {
+      audio_fft.pre_time_lcd = millis();
+
       lcdClearBuffer(black);
 
       lcdDrawFillRect(0, 0, LCD_WIDTH, 32, white);     
@@ -311,16 +359,15 @@ void cmdAudioUpdate(cmd_t *p_cmd)
       audio_fft.q15_buf_index = 0;
 
       int percent;
+      int percent_buf;
       uint32_t sample_rate;
       percent = file_index * 100 / file_size;
 
-      if (audio_type == AUDIO_TYPE_I2S)
-        sample_rate = i2sGetSampleRate();
-      else
-        sample_rate = saiGetSampleRate();
+      percent_buf = qbufferAvailable(&audio_q) * 100 / (AUDIO_Q_BUF_LEN - 1);
+      sample_rate = p_type->getSampleRate();
 
-      lcdPrintfResize(0, 40+ 0, white, 32, "%s_%d_KHz", audio_type == AUDIO_TYPE_I2S ? "I2S":"SAI", sample_rate/1000);
-      lcdPrintfResize(0, 40+32, blue, 32, "%dKB", file_index/1024);
+      lcdPrintfResize(0, 40+ 0, white, 32, "%s_%d_KHz", audio_hw_type == AUDIO_TYPE_I2S ? "I2S":"SAI", sample_rate/1000);
+      lcdPrintfResize(0, 40+32, blue, 32, "%dKB %d%%", file_index/1024, percent_buf);
       
       lcdDrawRect    (0, LCD_HEIGHT-16, LCD_WIDTH, 16, white);
       lcdDrawFillRect(0, LCD_HEIGHT-16, LCD_WIDTH * percent / 100, 16, green);     
@@ -361,8 +408,6 @@ bool cmdAudioProcess(cmd_t *p_cmd)
       ret = false;
       break;  
   }
-
-  cmdAudioUpdate(p_cmd);
 
   return ret;
 }

@@ -47,8 +47,12 @@ bool cmdThreadUpdate(void)
           cmdSendResp(&cmd[i], cmd[i].packet.cmd, ERR_CMD_NO_CMD, NULL, 0);
         }
       }
+      cmdBootUpdate(&cmd[i]);
+      cmdAudioUpdate(&cmd[i]);
     }
   }
+
+  
 
   return true;
 }
