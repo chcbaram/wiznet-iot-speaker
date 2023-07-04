@@ -34,29 +34,34 @@
       <property name="frameShadow">
        <enum>QFrame::Raised</enum>
       </property>
-      <widget class="QPushButton" name="pushButton">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>20</y>
-         <width>181</width>
-         <height>32</height>
-        </rect>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <property name="spacing">
+        <number>-1</number>
        </property>
-       <property name="text">
-        <string>Search</string>
-       </property>
-      </widget>
-      <widget class="QTableView" name="tableView">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>60</y>
-         <width>181</width>
-         <height>131</height>
-        </rect>
-       </property>
-      </widget>
+       <item>
+        <widget class="QPushButton" name="btn_scan">
+         <property name="text">
+          <string>Scan</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="combo_device"/>
+       </item>
+       <item>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
      </widget>
     </item>
     <item>

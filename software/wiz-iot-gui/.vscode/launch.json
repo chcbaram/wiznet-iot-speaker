@@ -1,0 +1,11 @@
+{
+  "configurations": [
+    {
+      "name": "Python: File",
+      "type": "python",
+      "request": "launch",
+      "program": "wiz-iot-gui.py",
+      "justMyCode": true
+    }
+  ]
+}

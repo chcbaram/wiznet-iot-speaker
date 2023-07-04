@@ -16,10 +16,10 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QIcon, QImage, QKeySequence, QLinearGradient,
     QPainter, QPalette, QPixmap, QRadialGradient,
     QTransform)
-from PySide6.QtWidgets import (QApplication, QFrame, QHBoxLayout, QHeaderView,
+from PySide6.QtWidgets import (QApplication, QComboBox, QFrame, QHBoxLayout,
     QMainWindow, QMenu, QMenuBar, QPlainTextEdit,
-    QPushButton, QSizePolicy, QStatusBar, QTabWidget,
-    QTableView, QVBoxLayout, QWidget)
+    QPushButton, QSizePolicy, QSpacerItem, QStatusBar,
+    QTabWidget, QVBoxLayout, QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -42,12 +42,25 @@ class Ui_MainWindow(object):
         self.frame.setMinimumSize(QSize(200, 0))
         self.frame.setFrameShape(QFrame.StyledPanel)
         self.frame.setFrameShadow(QFrame.Raised)
-        self.pushButton = QPushButton(self.frame)
-        self.pushButton.setObjectName(u"pushButton")
-        self.pushButton.setGeometry(QRect(10, 20, 181, 32))
-        self.tableView = QTableView(self.frame)
-        self.tableView.setObjectName(u"tableView")
-        self.tableView.setGeometry(QRect(10, 60, 181, 131))
+        self.verticalLayout_2 = QVBoxLayout(self.frame)
+#ifndef Q_OS_MAC
+        self.verticalLayout_2.setSpacing(-1)
+#endif
+        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
+        self.btn_scan = QPushButton(self.frame)
+        self.btn_scan.setObjectName(u"btn_scan")
+
+        self.verticalLayout_2.addWidget(self.btn_scan)
+
+        self.combo_device = QComboBox(self.frame)
+        self.combo_device.setObjectName(u"combo_device")
+
+        self.verticalLayout_2.addWidget(self.combo_device)
+
+        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+
+        self.verticalLayout_2.addItem(self.verticalSpacer)
+
 
         self.horizontalLayout.addWidget(self.frame)
 
@@ -109,7 +122,7 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"WIZ-IOT-GUI", None))
         self.actionForce_Exit.setText(QCoreApplication.translate("MainWindow", u"Force Exit", None))
         self.actionClear.setText(QCoreApplication.translate("MainWindow", u"Clear", None))
-        self.pushButton.setText(QCoreApplication.translate("MainWindow", u"Search", None))
+        self.btn_scan.setText(QCoreApplication.translate("MainWindow", u"Scan", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_audio), QCoreApplication.translate("MainWindow", u"Audio", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_info), QCoreApplication.translate("MainWindow", u"Info", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
