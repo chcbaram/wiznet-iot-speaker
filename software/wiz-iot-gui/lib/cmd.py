@@ -24,7 +24,8 @@ class CmdThread(QThread):
 
   def __init__(self, sock):
     super().__init__()
-    self.working = True    
+    self.working = True
+    self.request_exit = False    
     self.sock = sock
 
   def __del__(self):
@@ -34,14 +35,17 @@ class CmdThread(QThread):
     while self.working:
       try:
         data, addr = self.sock.recvfrom(1024)
+        print(addr)
         self.rxd_sig.emit(data, str(addr[0]), str(addr[1]))
-      except:
-        self.working = False
+      except Exception as e:
+        if self.request_exit == True:
+          self.working = False
 
   def setRxdSignal(self, receive_func):
     self.rxd_sig.connect(receive_func)
 
   def stop(self):
+    self.request_exit = True
     self.quit()
     while True:
       self.sleep(0.1)
