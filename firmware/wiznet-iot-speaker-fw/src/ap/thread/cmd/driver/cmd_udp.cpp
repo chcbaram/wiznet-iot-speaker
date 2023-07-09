@@ -1,6 +1,11 @@
 #include "cmd_udp.h"
 
 
+
+
+#define CMD_UDP_RX_LENGTH     32*1024
+
+
 typedef struct
 {
   char     ip_addr[32];
@@ -19,7 +24,7 @@ static bool is_init = false;
 static bool is_open = false;
 
 static uint8_t   socket_id = HW_WIZNET_SOCKET_CMD;
-static uint8_t   rx_buf[8*1024];
+static uint8_t   rx_buf[CMD_UDP_RX_LENGTH];
 static qbuffer_t rx_q;
 
 
@@ -34,7 +39,7 @@ bool cmdUdpInitDriver(cmd_driver_t *p_driver, const char *ip_addr, uint32_t port
   cmd_udp_args_t *p_args = (cmd_udp_args_t *)p_driver->args;
 
 
-  qbufferCreate(&rx_q, rx_buf, 8*1024);
+  qbufferCreate(&rx_q, rx_buf, CMD_UDP_RX_LENGTH);
 
   p_args->port  = port;
   strncpy(p_args->ip_addr, ip_addr, 32);
@@ -59,7 +64,7 @@ bool open(void *args)
 
 
   reg.d16 = W5300_REGS->RMSR.d16[0];
-  reg.d8[0] = 8;
+  reg.d8[0] = 16;
   W5300_REGS->RMSR.d16[0] = reg.d16;
 
   logPrintf("[OK] cmdUdpOpen()\n");
