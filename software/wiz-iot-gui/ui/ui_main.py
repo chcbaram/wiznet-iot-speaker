@@ -25,7 +25,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(852, 560)
+        MainWindow.resize(900, 562)
         font = QFont()
         font.setPointSize(14)
         MainWindow.setFont(font)
@@ -57,6 +57,18 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_2.addWidget(self.combo_device)
 
+        self.text_info = QPlainTextEdit(self.frame)
+        self.text_info.setObjectName(u"text_info")
+        sizePolicy = QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Minimum)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.text_info.sizePolicy().hasHeightForWidth())
+        self.text_info.setSizePolicy(sizePolicy)
+        self.text_info.setMinimumSize(QSize(174, 0))
+        self.text_info.setCursorWidth(0)
+
+        self.verticalLayout_2.addWidget(self.text_info)
+
         self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
         self.verticalLayout_2.addItem(self.verticalSpacer)
@@ -75,6 +87,57 @@ class Ui_MainWindow(object):
         self.frame_2.setMinimumSize(QSize(0, 300))
         self.frame_2.setFrameShape(QFrame.StyledPanel)
         self.frame_2.setFrameShadow(QFrame.Raised)
+        self.verticalLayout_4 = QVBoxLayout(self.frame_2)
+        self.verticalLayout_4.setObjectName(u"verticalLayout_4")
+        self.horizontalLayout_2 = QHBoxLayout()
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.combo_file = QComboBox(self.frame_2)
+        self.combo_file.setObjectName(u"combo_file")
+
+        self.horizontalLayout_2.addWidget(self.combo_file)
+
+        self.btn_open = QPushButton(self.frame_2)
+        self.btn_open.setObjectName(u"btn_open")
+        sizePolicy1 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(self.btn_open.sizePolicy().hasHeightForWidth())
+        self.btn_open.setSizePolicy(sizePolicy1)
+
+        self.horizontalLayout_2.addWidget(self.btn_open)
+
+
+        self.verticalLayout_4.addLayout(self.horizontalLayout_2)
+
+        self.horizontalLayout_4 = QHBoxLayout()
+        self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
+        self.horizontalLayout_4.setContentsMargins(7, -1, -1, -1)
+        self.btn_play = QPushButton(self.frame_2)
+        self.btn_play.setObjectName(u"btn_play")
+        sizePolicy2 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+        sizePolicy2.setHorizontalStretch(0)
+        sizePolicy2.setVerticalStretch(0)
+        sizePolicy2.setHeightForWidth(self.btn_play.sizePolicy().hasHeightForWidth())
+        self.btn_play.setSizePolicy(sizePolicy2)
+
+        self.horizontalLayout_4.addWidget(self.btn_play)
+
+        self.btn_stop = QPushButton(self.frame_2)
+        self.btn_stop.setObjectName(u"btn_stop")
+
+        self.horizontalLayout_4.addWidget(self.btn_stop)
+
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.horizontalLayout_4.addItem(self.horizontalSpacer)
+
+
+        self.verticalLayout_4.addLayout(self.horizontalLayout_4)
+
+        self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+
+        self.verticalLayout_4.addItem(self.verticalSpacer_2)
+
 
         self.verticalLayout_3.addWidget(self.frame_2)
 
@@ -95,7 +158,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 852, 24))
+        self.menubar.setGeometry(QRect(0, 0, 900, 24))
         self.menuFile = QMenu(self.menubar)
         self.menuFile.setObjectName(u"menuFile")
         self.menuLog = QMenu(self.menubar)
@@ -123,6 +186,9 @@ class Ui_MainWindow(object):
         self.actionForce_Exit.setText(QCoreApplication.translate("MainWindow", u"Force Exit", None))
         self.actionClear.setText(QCoreApplication.translate("MainWindow", u"Clear", None))
         self.btn_scan.setText(QCoreApplication.translate("MainWindow", u"Scan", None))
+        self.btn_open.setText(QCoreApplication.translate("MainWindow", u"Open", None))
+        self.btn_play.setText(QCoreApplication.translate("MainWindow", u"Play", None))
+        self.btn_stop.setText(QCoreApplication.translate("MainWindow", u"Stop", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_audio), QCoreApplication.translate("MainWindow", u"Audio", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_info), QCoreApplication.translate("MainWindow", u"Info", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))

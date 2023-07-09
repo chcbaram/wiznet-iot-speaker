@@ -10,7 +10,7 @@ from PySide6.QtGui import *
 from ui.ui_main import *
 from lib.log import LogWidget
 from lib.cmd import *
-
+from struct import *
 
 
 
@@ -29,7 +29,7 @@ class MainWindow(QMainWindow):
 
 
     self.cmd = Cmd()
-    self.cmd.setRxdSignal(self.rxdSignal)
+    # self.cmd.setRxdSignal(self.rxdSignal)
     
     self.setClickedEvent(self.ui.btn_scan, self.btnScan)  
 
@@ -42,14 +42,26 @@ class MainWindow(QMainWindow):
 
   def btnScan(self):
     self.ui.combo_device.clear()
-    self.cmd.send(PKT_TYPE_CMD, 0x0001, 0, bytes(10), 10)
+    self.ui.text_info.clear()
+    ret, packet = self.cmd.sendCmdRxResp(BOOT_CMD_VERSION, None, 0, 1000)
+    if ret == True:
+      self.ui.combo_device.addItem(packet.str_ip)
+      str_fmt = "I32s32sI"
+      fmt_size = calcsize(str_fmt)
+      data = unpack(str_fmt, packet.data[:fmt_size])
+      self.ui.text_info.appendPlainText(data[2].decode("utf-8"))
+      self.ui.text_info.appendPlainText("    " + data[1].decode("utf-8"))
+      self.ui.text_info.appendPlainText("    ")
 
-  def rxdSignal(self, data, str_ip, str_port):
-    print("rxd")
-    print(str_ip)
-    print(str_port)
-    print(data)
-    self.ui.combo_device.addItem(str_ip)
+      data = unpack(str_fmt, packet.data[fmt_size:fmt_size*2])
+      self.ui.text_info.appendPlainText(data[2].decode("utf-8"))
+      self.ui.text_info.appendPlainText("    " + data[1].decode("utf-8"))
+
+
+  def rxdSignal(self, packet: CmdPacket):
+    print(packet.str_ip)
+    print(packet.str_port)
+    self.ui.combo_device.addItem(packet.str_ip)
     
 
 
