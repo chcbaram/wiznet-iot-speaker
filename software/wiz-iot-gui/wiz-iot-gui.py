@@ -62,6 +62,8 @@ class PlayThread(QThread):
       self.max_frames = self.wav_file.getnframes()
 
 
+      self.file_buf = self.wav_file.readframes(self.max_frames)
+
       while self.is_run:
         pre_time = millis()
         ret, data = self.cmd_audio.ready()        
@@ -76,7 +78,8 @@ class PlayThread(QThread):
             r_len = 350
           w_len += r_len
 
-          tx_buf = self.wav_file.readframes(r_len)
+          # tx_buf = self.wav_file.readframes(r_len)
+          tx_buf = self.file_buf[self.read_frames*4:self.read_frames*4 + r_len*4]
 
           file_size = self.read_frames * self.file.channels * self.file.sample_width
           head_buf = pack("I", file_size)
