@@ -198,12 +198,18 @@ class Cmd:
   def __del__(self):
     self.sock.close()
     self.rxd_thread.stop()
-    print("sock.close()")
+    print("cmd->del()")
 
   def init(self):
     return
   
   def open(self):
+    return
+
+  def stop(self):
+    self.sock.close()
+    self.rxd_thread.stop()
+    print("cmd->stop()")
     return
 
   def send(self, type, cmd, err_code, data, length):

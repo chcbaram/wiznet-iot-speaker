@@ -18,8 +18,8 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QTransform)
 from PySide6.QtWidgets import (QApplication, QComboBox, QFrame, QHBoxLayout,
     QMainWindow, QMenu, QMenuBar, QPlainTextEdit,
-    QPushButton, QSizePolicy, QSpacerItem, QStatusBar,
-    QTabWidget, QVBoxLayout, QWidget)
+    QProgressBar, QPushButton, QSizePolicy, QSpacerItem,
+    QStatusBar, QTabWidget, QVBoxLayout, QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -103,6 +103,7 @@ class Ui_MainWindow(object):
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.btn_open.sizePolicy().hasHeightForWidth())
         self.btn_open.setSizePolicy(sizePolicy1)
+        self.btn_open.setMinimumSize(QSize(0, 0))
 
         self.horizontalLayout_2.addWidget(self.btn_open)
 
@@ -111,7 +112,7 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_4 = QHBoxLayout()
         self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
-        self.horizontalLayout_4.setContentsMargins(7, -1, -1, -1)
+        self.horizontalLayout_4.setContentsMargins(0, -1, -1, -1)
         self.btn_play = QPushButton(self.frame_2)
         self.btn_play.setObjectName(u"btn_play")
         sizePolicy2 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
@@ -133,6 +134,24 @@ class Ui_MainWindow(object):
 
 
         self.verticalLayout_4.addLayout(self.horizontalLayout_4)
+
+        self.prog_bar_play = QProgressBar(self.frame_2)
+        self.prog_bar_play.setObjectName(u"prog_bar_play")
+        sizePolicy3 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        sizePolicy3.setHorizontalStretch(0)
+        sizePolicy3.setVerticalStretch(0)
+        sizePolicy3.setHeightForWidth(self.prog_bar_play.sizePolicy().hasHeightForWidth())
+        self.prog_bar_play.setSizePolicy(sizePolicy3)
+        self.prog_bar_play.setMinimumSize(QSize(0, 0))
+        self.prog_bar_play.setValue(0)
+
+        self.verticalLayout_4.addWidget(self.prog_bar_play)
+
+        self.text_file_info = QPlainTextEdit(self.frame_2)
+        self.text_file_info.setObjectName(u"text_file_info")
+        self.text_file_info.setCursorWidth(0)
+
+        self.verticalLayout_4.addWidget(self.text_file_info)
 
         self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
