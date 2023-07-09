@@ -16,3 +16,10 @@
   pip install -r requirements.txt
 
   ```
+- 실행하기
+  ```
+  python wiz-iot-gui.py
+  or
+  python3 wiz-iot-gui.py
+  ```
+  
