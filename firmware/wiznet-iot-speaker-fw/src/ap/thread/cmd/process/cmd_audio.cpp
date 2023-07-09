@@ -9,7 +9,7 @@
 #define AUDIO_CMD_WRITE_NO_RESP     0x0025
 
 
-#define AUDIO_Q_BUF_LEN (6*1024)
+#define AUDIO_Q_BUF_LEN (8*1024)
 
 #define FFT_LEN         512
 #define BLOCK_X_CNT     12

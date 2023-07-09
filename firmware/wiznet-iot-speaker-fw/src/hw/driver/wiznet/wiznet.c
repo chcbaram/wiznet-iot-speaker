@@ -23,8 +23,8 @@ static void wiznetTimerISR(void *arg);
 
 
 static uint8_t memsize[2][8] = 
-    {{8, 8, 8, 8, 8, 8, 8, 8}, 
-     {8, 8, 8, 8, 8, 8, 8, 8}};
+    {{16, 8, 8, 8, 8, 8, 4, 4}, 
+     {16, 8, 8, 8, 8, 8, 4, 4}};
 
 static uint8_t dhcp_buf[ETHERNET_BUF_MAX_SIZE] = {0,}; 
 static uint8_t sntp_buf[ETHERNET_BUF_MAX_SIZE] = {0,}; 

@@ -60,12 +60,12 @@ bool open(void *args)
 {
   bool ret = false;
   // cmd_udp_args_t *p_args = (cmd_udp_args_t *)args;
-  reg16_t reg;
+  // reg16_t reg;
 
 
-  reg.d16 = W5300_REGS->RMSR.d16[0];
-  reg.d8[0] = 16;
-  W5300_REGS->RMSR.d16[0] = reg.d16;
+  // reg.d16 = W5300_REGS->RMSR.d16[0];
+  // reg.d8[0] = 32;
+  // W5300_REGS->RMSR.d16[0] = reg.d16;
 
   logPrintf("[OK] cmdUdpOpen()\n");
   logPrintf("     TMSR0 : %d KB\n", W5300_REGS->TMSR.d8[0]);
