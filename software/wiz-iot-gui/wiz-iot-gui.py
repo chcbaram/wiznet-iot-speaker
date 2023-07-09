@@ -11,7 +11,30 @@ from PySide6.QtGui import *
 from ui.ui_main import *
 from lib.log import LogWidget
 from lib.cmd import *
+from lib.cmd_audio import *
 from struct import *
+
+
+
+def millis():
+  return round(time.time() * 1000)
+
+
+class FileInfo:
+  def __init__(self, file_name):
+    super().__init__()
+    self.hw_type = 0x00
+
+    wav_file = wave.open(file_name)
+    self.full_name = file_name 
+    self.name = os.path.basename(file_name)
+    self.channels = wav_file.getnchannels()
+    self.sample_bits = wav_file.getsampwidth() * 8
+    self.sample_width = wav_file.getsampwidth()
+    self.sample_freq = wav_file.getframerate()
+    self.frames = wav_file.getnframes()
+    print(self.frames)
+    wav_file.close()
 
 
 class PlayThread(QThread):
@@ -19,9 +42,11 @@ class PlayThread(QThread):
   finish_sig = Signal()
   update_sig = Signal(int)
 
-  def __init__(self, parent):
+  def __init__(self, parent, cmd_audio):
     super().__init__(parent)
     self.is_run = True
+    self.hw_type = AUDIO_TYPE_I2S
+    self.cmd_audio = cmd_audio
 
   def __del__(self):
     pass
@@ -29,21 +54,60 @@ class PlayThread(QThread):
   def run(self):
     try:
       self.start_sig.emit()
-      count = 0
+      file_size = self.file.frames * self.file.channels * self.file.sample_width
+
+      self.cmd_audio.begin(self.hw_type, bytes(self.file.name, "utf-8"), self.file.sample_freq, file_size)
+      self.wav_file = wave.open(self.file.full_name)
+      self.read_frames = 0
+      self.max_frames = self.wav_file.getnframes()
+
+      # self.file_buf = self.wav_file.readframes(self.max_frames)
+
+
       while self.is_run:
-        time.sleep(0.1)
-        if count >= 100:
+        pre_time = millis()
+        ret, data = self.cmd_audio.ready()        
+        ready_cnt = int(data / 2)
+        if ret == False:
+          ready_cnt = 100
+
+        w_len = 0
+        while w_len < ready_cnt:
+          r_len = ready_cnt-w_len
+          if r_len > 300:
+            r_len = 300
+          w_len += r_len
+
+          # tx_buf = self.file_buf[self.read_frames*4:self.read_frames*4 + r_len*4]
+          tx_buf = self.wav_file.readframes(r_len)
+
+          file_size = self.read_frames * self.file.channels * self.file.sample_width
+          head_buf = pack("I", file_size)
+
+          self.cmd_audio.writeNoResp(head_buf + tx_buf, 100)          
+          self.read_frames += r_len
+
+
+        count = self.read_frames * 100 / self.max_frames        
+        self.update_sig.emit(int(count)) 
+        if self.read_frames >= self.max_frames:
           break   
-        count += 1     
-        self.update_sig.emit(count) 
+
+      self.cmd_audio.end()
+      self.wav_file.close()
       self.finish_sig.emit()
     except Exception as e:
       print(e)
+
+  def setPlay(self, hw_type, file: FileInfo):
+    self.hw_type = hw_type
+    self.file = file
 
   def stop(self):
     self.is_run = False
     self.quit()
     self.wait()
+
 
 
 class MainWindow(QMainWindow):
@@ -60,11 +124,8 @@ class MainWindow(QMainWindow):
     self.file_list = []
 
     self.cmd = Cmd()
-    # self.play_thread = PlayThread(self)
+    self.cmd_audio = CmdAudio(self.cmd)
     self.play_thread = None
-    # self.play_thread.start_sig.connect(self.onStartPlay)
-    # self.play_thread.finish_sig.connect(self.onFinishPlay)
-    # self.play_thread.update_sig.connect(self.onUpdatePlay)
 
     self.setClickedEvent(self.ui.btn_scan, self.btnScan)  
     self.setClickedEvent(self.ui.btn_open, self.btnOpen)  
@@ -73,7 +134,9 @@ class MainWindow(QMainWindow):
 
     self.ui.combo_file.currentTextChanged.connect(self.onComboFileChanged)
     self.ui.btn_stop.setEnabled(False)
+    self.ui.radio_i2s.setChecked(True)
 
+  
   def __del__(self):
     self.sock.close()
     self.cmd.stop()
@@ -159,11 +222,16 @@ class MainWindow(QMainWindow):
 
   def btnPlay(self):
     if self.isCanPlay() == True:
-      self.play_thread = PlayThread(self)
+      play_file = FileInfo(self.file_list[self.ui.combo_file.currentIndex()])
+      self.play_thread = PlayThread(self, self.cmd_audio)
       self.play_thread.start_sig.connect(self.onStartPlay)
       self.play_thread.finish_sig.connect(self.onFinishPlay)
       self.play_thread.update_sig.connect(self.onUpdatePlay)
-
+      if self.ui.radio_i2s.isChecked():
+        hw_type = AUDIO_TYPE_I2S
+      else:
+        hw_type = AUDIO_TYPE_SAI
+      self.play_thread.setPlay(hw_type, play_file)
       self.play_thread.start()
     else:
       self.log.printLog("Can't play")

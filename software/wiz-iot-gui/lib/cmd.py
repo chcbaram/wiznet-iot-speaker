@@ -259,7 +259,7 @@ class Cmd:
         break
       if millis()-pre_time > timeout_ms:
         break
-      time.sleep(0.001)
+      # time.sleep(0.001)
 
     return self.is_rxd_packet, self.rxd_packet
 

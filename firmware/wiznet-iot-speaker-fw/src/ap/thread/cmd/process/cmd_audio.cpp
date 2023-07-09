@@ -110,9 +110,8 @@ static void cmdAudioBegin(cmd_t *p_cmd)
   memset(audio_fft.block_peak, 0, sizeof(audio_fft.block_peak));
   memset(audio_fft.block_value, 0, sizeof(audio_fft.block_value));
   memset(audio_fft.block_target, 0, sizeof(audio_fft.block_target));
-
   logPrintf("[  ] AudioBegin()\n");
-  logPrintf("       type : %s \n", audio_type==0 ? "I2S":"SAI");
+  logPrintf("       type : %s \n", audio_hw_type == 0 ? "I2S":"SAI");
   logPrintf("       rate : %d Khz\n", p_begin->sample_rate/1000);
   logPrintf("       name : %s \n", file_name);
   logPrintf("       size : %d \n", file_size);

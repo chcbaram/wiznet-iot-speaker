@@ -160,6 +160,20 @@
               </widget>
              </item>
              <item>
+              <widget class="QRadioButton" name="radio_i2s">
+               <property name="text">
+                <string>I2S</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QRadioButton" name="radio_sai">
+               <property name="text">
+                <string>SAI</string>
+               </property>
+              </widget>
+             </item>
+             <item>
               <spacer name="horizontalSpacer">
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>

@@ -18,8 +18,9 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QTransform)
 from PySide6.QtWidgets import (QApplication, QComboBox, QFrame, QHBoxLayout,
     QMainWindow, QMenu, QMenuBar, QPlainTextEdit,
-    QProgressBar, QPushButton, QSizePolicy, QSpacerItem,
-    QStatusBar, QTabWidget, QVBoxLayout, QWidget)
+    QProgressBar, QPushButton, QRadioButton, QSizePolicy,
+    QSpacerItem, QStatusBar, QTabWidget, QVBoxLayout,
+    QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -128,6 +129,16 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_4.addWidget(self.btn_stop)
 
+        self.radio_i2s = QRadioButton(self.frame_2)
+        self.radio_i2s.setObjectName(u"radio_i2s")
+
+        self.horizontalLayout_4.addWidget(self.radio_i2s)
+
+        self.radio_sai = QRadioButton(self.frame_2)
+        self.radio_sai.setObjectName(u"radio_sai")
+
+        self.horizontalLayout_4.addWidget(self.radio_sai)
+
         self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
         self.horizontalLayout_4.addItem(self.horizontalSpacer)
@@ -208,6 +219,8 @@ class Ui_MainWindow(object):
         self.btn_open.setText(QCoreApplication.translate("MainWindow", u"Open", None))
         self.btn_play.setText(QCoreApplication.translate("MainWindow", u"Play", None))
         self.btn_stop.setText(QCoreApplication.translate("MainWindow", u"Stop", None))
+        self.radio_i2s.setText(QCoreApplication.translate("MainWindow", u"I2S", None))
+        self.radio_sai.setText(QCoreApplication.translate("MainWindow", u"SAI", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_audio), QCoreApplication.translate("MainWindow", u"Audio", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_info), QCoreApplication.translate("MainWindow", u"Info", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
