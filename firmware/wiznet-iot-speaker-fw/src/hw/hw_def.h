@@ -6,7 +6,7 @@
 #include "bsp.h"
 
 
-#define _DEF_FIRMWATRE_VERSION    "V230616R1"
+#define _DEF_FIRMWATRE_VERSION    "V230907R1"
 #define _DEF_BOARD_NAME           "IOT-SPEAKER-FW"
 
 

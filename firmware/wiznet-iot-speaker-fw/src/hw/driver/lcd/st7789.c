@@ -102,18 +102,16 @@ bool st7789InitDriver(lcd_driver_t *p_driver)
 
 bool st7789Reset(void)
 {
-  spiBegin(spi_ch);
-  spiSetDataMode(spi_ch, SPI_MODE2);
-
-  spiAttachTxInterrupt(spi_ch, transferDoneISR);
-
-    
   gpioPinWrite(_PIN_DEF_BLK, _DEF_LOW);
   gpioPinWrite(_PIN_DEF_DC,  _DEF_HIGH);
   gpioPinWrite(_PIN_DEF_RST, _DEF_LOW);
   delay(10);
   gpioPinWrite(_PIN_DEF_RST, _DEF_HIGH);
   delay(50);
+
+  spiBegin(spi_ch);
+  spiSetDataMode(spi_ch, SPI_MODE3);
+  spiAttachTxInterrupt(spi_ch, transferDoneISR);
 
   st7789InitRegs();
 
