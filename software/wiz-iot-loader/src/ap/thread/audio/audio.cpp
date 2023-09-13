@@ -75,10 +75,13 @@ void audioMain(arg_option_t *args)
   {
     if (strncmp(args->port_str, "udp", 3) == 0)
     {
+      const char ip_str[32] = "255.255.255.255";
+      strncpy(args->port_str, ip_str, 128);
+      logPrintf("-p %s\n", args->port_str);      
       is_udp = true;
     }
 
-    uint32_t str_len;
+    int32_t str_len;
     uint32_t cnt;
 
     str_len = strlen(args->port_str);

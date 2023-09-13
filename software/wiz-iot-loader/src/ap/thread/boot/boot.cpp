@@ -241,7 +241,7 @@ uint16_t bootCmdFirmWrite(uint32_t addr, uint8_t *p_data, uint32_t length, uint3
   tx_buf[6] = (length >> 16) & 0xFF;
   tx_buf[7] = (length >> 24) & 0xFF;
 
-  for (int i=0; i<length; i++)
+  for (int i=0; i<(int)length; i++)
   {
     tx_buf[8+i] = p_data[i];  
   }

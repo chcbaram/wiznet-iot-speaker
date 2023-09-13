@@ -465,7 +465,7 @@ void apDownMode(void)
     //
     uint32_t tx_block_size = arg_option.tx_block_len;
     uint8_t  tx_buf[arg_option.tx_block_len];
-    uint32_t tx_len;
+    int32_t tx_len;
     int32_t  len_to_send;
     bool write_done = false;
     
