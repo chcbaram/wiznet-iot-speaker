@@ -35,7 +35,7 @@ uint32_t getFileCrc(char *file_name);
 
 void apInit(void)
 {
-  logPrintf("WIZ-IOT-LOADER V230616R1\n\n");
+  logPrintf("WIZ-IOT-LOADER V230913R1\n\n");
 
   arg_option.mode = MODE_DOWN;
   arg_option.is_udp = false;
@@ -176,8 +176,14 @@ void apShowHelp(void)
 {
   logPrintf("wiz-iot-loader [udp] -p com1 -f fw.bin\n");
   logPrintf("            -h : help\n");
-  logPrintf("            -m udp   : udp \n");
-  logPrintf("            -p com1  : com port\n");
+  logPrintf("            -m : udp \n");
+  logPrintf("                 audio \n");
+  logPrintf("                 uart \n");
+  logPrintf("            -p : com port\n");
+  logPrintf("                 udp\n");
+  logPrintf("                 10:10:10:10\n");
+  logPrintf("            -t : i2s\n");
+  logPrintf("                 sai\n");
   logPrintf("            -b 115200: baud\n");
   logPrintf("            -f fw.bin: firmware\n");
 }

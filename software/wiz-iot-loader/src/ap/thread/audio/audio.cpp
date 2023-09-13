@@ -1,6 +1,7 @@
 #include "audio.h"
 #include "audio_def.h"
 #include "cmd/driver/cmd_udp.h"
+#include "cmd/driver/cmd_uart.h"
 
 
 #define AUDIO_CMD_INFO              0x0020
@@ -12,7 +13,6 @@
 
 
 
-#define USE_WRITE_RESP              0
 
 
 
@@ -28,11 +28,8 @@ typedef struct
 static uint16_t audioCmdBegin(audio_begin_t *p_data, uint32_t timeout);
 static uint16_t audioCmdEnd(uint32_t timeout);
 static uint16_t audioCmdReady(uint32_t *p_data, uint32_t timeout);
-#if USE_WRITE_RESP == 1
 static uint16_t audioCmdWrite(void *p_data, uint32_t length, uint32_t timeout);
-#else
 static uint16_t audioCmdWriteNoResp(void *p_data, uint32_t length);
-#endif
 static char *getFileNameFromPath(char *path );
 static int32_t getFileSize(char *file_name);
 
@@ -60,6 +57,10 @@ void audioMain(arg_option_t *args)
   FILE *fp;
   wavfile_header_t header;
   int32_t  volume = 100;
+  bool     is_udp = false;
+  bool     write_resp = false;
+  uint32_t write_buf_len = 700;
+
 
 
   if ((args->arg_bits & ARG_OPTION_PORT) == 0)
@@ -68,11 +69,54 @@ void audioMain(arg_option_t *args)
     strncpy(args->port_str, ip_str, 128);
     args->arg_bits |= ARG_OPTION_PORT;
     logPrintf("-p %s\n", args->port_str);
+    is_udp = true;
+  }
+  else
+  {
+    if (strncmp(args->port_str, "udp", 3) == 0)
+    {
+      is_udp = true;
+    }
+
+    uint32_t str_len;
+    uint32_t cnt;
+
+    str_len = strlen(args->port_str);
+    cnt = 0;
+    for (int i=0; i<str_len; i++)
+    {
+      if (args->port_str[i] == '.')
+        cnt++;
+    }
+    if (cnt == 3)
+    {
+      is_udp = true;
+    }
   }
 
-  cmdUdpInitDriver(&cmd_driver, args->port_str, 5000);
+
+  if (is_udp)
+  {
+    logPrintf("UDP\n");
+    cmdUdpInitDriver(&cmd_driver, args->port_str, 5000);
+    write_resp = false;
+    write_buf_len = 700;    
+  }
+  else
+  {
+    logPrintf("USB\n");
+    uartSetPortName(_USE_UART_CMD, args->port_str);
+    cmdUartInitDriver(&cmd_driver, _USE_UART_CMD, args->port_baud);    
+    write_resp = true;
+    write_buf_len = 500;    
+  }
   cmdInit(&cmd, &cmd_driver);
-  cmdOpen(&cmd);  
+  
+  if (cmdOpen(&cmd) != true)
+  {
+    logPrintf("cmdOpen() fail %s\n", args->port_str);
+    return;    
+  }
 
   uartOpen(_USE_UART_CLI, 115200);
 
@@ -175,7 +219,7 @@ void audioMain(arg_option_t *args)
     {
       int r_len;
 
-      r_len = constrain((ready_cnt-w_len), 0, 700);
+      r_len = constrain((ready_cnt-w_len), 0, write_buf_len);
       r_len = r_len / 2;
 
       w_len += (r_len * 2);
@@ -215,11 +259,14 @@ void audioMain(arg_option_t *args)
         }
       }
 
-      #if USE_WRITE_RESP == 1
-      err_ret = audioCmdWrite(buf_data, r_len * 2 * 2 + 4, 50);
-      #else
-      err_ret = audioCmdWriteNoResp(buf_data, r_len * 2 * 2 + 4);
-      #endif
+      if (write_resp)
+      {
+        err_ret = audioCmdWrite(buf_data, r_len * 2 * 2 + 4, 50);
+      }
+      else
+      {
+        err_ret = audioCmdWriteNoResp(buf_data, r_len * 2 * 2 + 4);
+      }
       if (err_ret != CMD_OK)
       {
         logPrintf("audioCmdWrite() Fail\n");
